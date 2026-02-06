@@ -11,7 +11,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Optional, Dict, List, Literal
 from dataclasses import dataclass
 
-from src.plan_classification.engine import CATEGORY_PATTERNS
+from ...engine import CATEGORY_PATTERNS
 
 
 # Cost estimates per 1K tokens (approximate)

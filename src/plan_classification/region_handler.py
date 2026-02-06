@@ -192,7 +192,7 @@ class RegionHandler:
         
         # Initialize AI classifier if key provided
         if openai_api_key:
-            from src.plan_classification.utils.ai.ai_classifier import AIClassifier
+            from .utils.ai.ai_classifier import AIClassifier
             self.ai_classifier = AIClassifier(api_key=openai_api_key)
     
     def auto_detect_region(self, pdf_path: str, min_validation_rate: float = 0.6) -> RegionResult:

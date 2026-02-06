@@ -17,13 +17,13 @@ from .pdf_utils import (
     bulk_extract_text_from_regions
 )
 
-from src.plan_classification.utils import (
-    AIClassifier, OpenAIClassifier, ClaudeClassifier, 
+from .utils import (
+    AIClassifier, OpenAIClassifier, ClaudeClassifier,
     ClassifierPool, PageClassification, create_classifier,
     AISummaryService
 )
 
-from src.plan_classification.utils.ai.ai_summary_service import (
+from .utils.ai.ai_summary_service import (
     SummaryResult,
     AIDirResult,
 )
