@@ -1,7 +1,20 @@
-.venv
-\.venv
-.idea
-\.idea
+# Virtual environment
+.venv/
 
-__pycache__
+# IDE
+.idea/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Environment
 .env
+
+# Build artifacts
+*.egg-info/
+dist/
+build/
+
+TODO.md

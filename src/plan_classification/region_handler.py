@@ -11,7 +11,7 @@ from pathlib import Path
 
 import fitz
 
-from .pdf_utils import extract_text_from_region, extract_image_from_region, optimize_image_for_api
+from .pdf_utils import extract_text_from_region, optimize_image_for_api
 from .engine import CATEGORY_PATTERNS
 
 
@@ -192,7 +192,7 @@ class RegionHandler:
         
         # Initialize AI classifier if key provided
         if openai_api_key:
-            from .ai_classifier import AIClassifier
+            from src.plan_classification.utils.ai.ai_classifier import AIClassifier
             self.ai_classifier = AIClassifier(api_key=openai_api_key)
     
     def auto_detect_region(self, pdf_path: str, min_validation_rate: float = 0.6) -> RegionResult:

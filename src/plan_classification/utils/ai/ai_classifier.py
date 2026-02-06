@@ -11,7 +11,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Optional, Dict, List, Literal
 from dataclasses import dataclass
 
-from .engine import CATEGORY_PATTERNS
+from src.plan_classification.engine import CATEGORY_PATTERNS
 
 
 # Cost estimates per 1K tokens (approximate)
@@ -20,12 +20,15 @@ COSTS = {
     'gpt-4.1': {'input': 0.002, 'output': 0.008},
     'gpt-4.1-mini': {'input': 0.0004, 'output': 0.0016},
     'gpt-4.1-nano': {'input': 0.0001, 'output': 0.0004},
+
     # GPT-5 family
     'gpt-5-mini': {'input': 0.001, 'output': 0.004},
     'gpt-5-nano': {'input': 0.0002, 'output': 0.0008},
+
     # Legacy
     'gpt-4o': {'input': 0.0025, 'output': 0.01},
     'gpt-4o-mini': {'input': 0.00015, 'output': 0.0006},
+
     # Claude
     'claude-3-5-sonnet': {'input': 0.003, 'output': 0.015},
     'claude-3-haiku': {'input': 0.00025, 'output': 0.00125},
@@ -117,7 +120,8 @@ Return JSON only, no markdown:
 If no valid sheet number visible:
 {{"sheet_number": "", "category": "Unclassified", "confidence": 0.0}}"""
 
-    def _validate_sheet_number(self, sheet_number: str) -> tuple[bool, Optional[str]]:
+    @staticmethod
+    def _validate_sheet_number(sheet_number: str) -> tuple[bool, Optional[str]]:
         """Validate sheet number against known patterns"""
         if not sheet_number:
             return False, None
@@ -126,25 +130,30 @@ If no valid sheet number visible:
                 return True, category
         return False, None
 
-    def _build_batch_prompt(self, page_count: int) -> str:
+    @staticmethod
+    def _build_batch_prompt(page_count: int) -> str:
         """Build prompt for batch classification"""
-        return f"""Analyze these {page_count} construction drawing title block images.
-For EACH image, identify the sheet number.
 
-Sheet number patterns:
-- A = Architectural (A-101, A1.01)
-- S = Structural, E = Electrical, M = Mechanical, P = Plumbing
-- C = Civil, G = General, L = Landscape
-- FP = Fire Protection, FS = Food Service, LS = Life Safety, SS = Security, T = Technology
-
-Return a JSON object with a "results" array containing one object per image, in order:
-{{"results": [
-  {{"image": 1, "sheet_number": "A-101", "category": "Architectural", "confidence": 0.95}},
-  {{"image": 2, "sheet_number": "S-201", "category": "Structural", "confidence": 0.90}}
-]}}
-
-If no sheet number visible for an image:
-{{"image": N, "sheet_number": "", "category": "Unclassified", "confidence": 0.0}}"""
+        return f"""
+                Analyze these {page_count} construction drawing title block images.
+                For EACH image, identify the sheet number.
+                
+                Sheet number patterns:
+                - A = Architectural (A-101, A1.01)
+                - S = Structural, E = Electrical, M = Mechanical, P = Plumbing
+                - C = Civil, G = General, L = Landscape
+                - FP = Fire Protection, FS = Food Service, LS = Life Safety, SS = Security, T = Technology
+                
+                Return a JSON object with a "results" array containing one object per image, in order:
+                {{"results": [
+                  {{"image": 1, "sheet_number": "A-101", "category": "Architectural", "confidence": 0.95}},
+                  {{"image": 2, "sheet_number": "S-201", "category": "Structural", "confidence": 0.90}}
+                ]}}
+                
+                If no sheet number visible for an image:
+                {{"image": N, "sheet_number": "", "category": "Unclassified", "confidence": 0.0}}
+                        
+                """
 
     def classify_batch(
         self,

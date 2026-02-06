@@ -17,9 +17,15 @@ from .pdf_utils import (
     bulk_extract_text_from_regions
 )
 
-from .ai_classifier import (
+from src.plan_classification.utils import (
     AIClassifier, OpenAIClassifier, ClaudeClassifier, 
-    ClassifierPool, PageClassification, create_classifier
+    ClassifierPool, PageClassification, create_classifier,
+    AISummaryService
+)
+
+from src.plan_classification.utils.ai.ai_summary_service import (
+    SummaryResult,
+    AIDirResult,
 )
 
 from .region_handler import (
@@ -52,4 +58,7 @@ __all__ = [
     'RegionDetectionError',
     'COMMON_REGIONS',
     'BreakoutHandler',
+    'AISummaryService',
+    'SummaryResult',
+    'AIDirResult',
 ]
