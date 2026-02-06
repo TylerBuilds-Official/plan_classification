@@ -21,22 +21,31 @@ class AISummaryService:
 
         self.summary_prompts = {
             "directory": (
-                "You are a construction document classification expert. "
-                "Given a filename that may contain partial, ambiguous, or abbreviated information, "
-                "generate a concise, professional directory name that best represents the document’s "
-                "project scope, discipline, and intent. "
-                "Avoid guessing specific values. Prefer clarity, standard construction terminology, "
-                "and filesystem-safe naming."
+                "You are a construction document classification expert.\n"
+                "Given a PDF filename, generate a concise directory name representing "
+                "the project's scope and discipline.\n\n"
+                "Rules:\n"
+                "- Use PascalCase_With_Underscores (e.g. Municipal_Water_Treatment_Expansion)\n"
+                "- No spaces, special characters, or trailing underscores\n"
+                "- 1-6 words maximum\n"
+                "- Use standard terminology, preferably a direct concise reference to the filename\n"
+                "- Do not guess specific addresses, dates, or project numbers unless clearly present\n"
+                "- Return ONLY the directory name, nothing else\n"
+                "\nExample:\n"
+                "- Input: '2023-04-15-Project-Plan.pdf'\n"
+                "- Output: 'Project_Plans'"
             ),
 
             "results": (
-                "You are a master construction analyst. "
-                "Review the following JSON plan data representing extracted and classified construction information. "
-                "Produce a clear, user-facing summary that explains what was found, how it was categorized, "
-                "and any notable patterns, ambiguities, or limitations. "
-                "Write for a non-technical construction professional. "
-                "Do not restate raw JSON. Summarize meaning, outcomes, and confidence."
-            )
+                "Summarize the following construction plan classification results "
+                "for a non-technical construction professional.\n\n"
+                "Rules:\n"
+                "- 1-2 short paragraphs (3 only if truly necessary)\n"
+                "- 500 character hard limit\n"
+                "- Explain what was found, how it was categorized, and any notable patterns\n"
+                "- Do not restate raw data — summarize meaning and outcomes\n"
+                "- Use plain language, not technical jargon"
+            ),
         }
 
         if isinstance(self.client, Anthropic):
