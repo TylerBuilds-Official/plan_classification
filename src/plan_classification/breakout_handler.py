@@ -38,12 +38,14 @@ class BreakoutHandler:
         ranges.append((start, end))
         return ranges
 
-    def breakout(self, on_progress: callable = None):
+    def breakout(self, on_progress: callable = None, date_map: dict = None):
         """Main method to split PDF by discipline.
         
         Args:
             on_progress: Optional callback(current_category, total_categories, category_name)
                          called after each category file is created.
+            date_map: Optional {category: "MMDDYY"} for per-category date prefixes.
+                      Falls back to today's date if not provided.
         """
         # Group pages by category
         # results[i] has: page_num, category, confidence, method, etc.
@@ -59,8 +61,8 @@ class BreakoutHandler:
                 category_pages[category] = []
             category_pages[category].append(page_num)
 
-        # Generate timestamp
-        date_prefix = datetime.now().strftime("%m%d%y")  # "121825"
+        # Default date prefix (used when date_map doesn't have a category)
+        default_date = datetime.now().strftime("%m%d%y")
 
         # Ensure output dir is set
         if self.output_dir is None:
@@ -85,6 +87,7 @@ class BreakoutHandler:
                 output_pdf.close()
                 continue
 
+            date_prefix = (date_map or {}).get(category, default_date)
             filename = f"{date_prefix}_{category}.pdf"
             output_path = os.path.join(self.output_dir, filename)
             

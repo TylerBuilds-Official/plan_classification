@@ -148,6 +148,42 @@ def optimize_image_for_api(
     return output.getvalue()
 
 
+def extract_full_page_image(
+    page: fitz.Page,
+    zoom: float = 3.0,
+    max_dimension: int = 4096,
+    quality: int = 95
+) -> bytes:
+    """
+    Render a full PDF page as a high-quality JPEG image.
+
+    Args:
+        page: PyMuPDF page object
+        zoom: Zoom factor for rendering
+        max_dimension: Max width or height in pixels
+        quality: JPEG quality (1-100)
+
+    Returns:
+        JPEG image bytes
+    """
+    mat = fitz.Matrix(zoom, zoom)
+    pix = page.get_pixmap(matrix=mat, alpha=False)
+
+    img = Image.open(BytesIO(pix.tobytes('png')))
+
+    # Downscale if needed
+    if max(img.size) > max_dimension:
+        ratio = max_dimension / max(img.size)
+        new_size = (int(img.width * ratio), int(img.height * ratio))
+        img = img.resize(new_size, Image.Resampling.LANCZOS)
+
+    output = BytesIO()
+    if img.mode == 'RGBA':
+        img = img.convert('RGB')
+    img.save(output, format='JPEG', quality=quality, optimize=True)
+    return output.getvalue()
+
+
 def get_pdf_page_count(pdf_path: str) -> int:
     """Get total number of pages in PDF"""
     doc = fitz.open(pdf_path)

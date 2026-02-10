@@ -10,6 +10,7 @@ from .engine import (
 from .pdf_utils import (
     extract_text_from_region,
     extract_image_from_region,
+    extract_full_page_image,
     optimize_image_for_api,
     get_pdf_page_count,
     load_pdf_page,
@@ -26,6 +27,7 @@ from .utils import (
 from .utils.ai.ai_summary_service import (
     SummaryResult,
     AIDirResult,
+    DateResult,
 )
 
 from .region_handler import (
@@ -42,6 +44,7 @@ __all__ = [
     'CATEGORY_PATTERNS',
     'extract_text_from_region',
     'extract_image_from_region',
+    'extract_full_page_image',
     'optimize_image_for_api',
     'get_pdf_page_count',
     'load_pdf_page',
@@ -61,4 +64,5 @@ __all__ = [
     'AISummaryService',
     'SummaryResult',
     'AIDirResult',
+    'DateResult',
 ]
