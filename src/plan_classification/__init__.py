@@ -30,12 +30,10 @@ from .utils.ai.ai_summary_service import (
     DateResult,
 )
 
-from .region.region_handler import (
-    RegionHandler,
-    RegionResult,
-    RegionDetectionError,
-    COMMON_REGIONS
-)
+from .region.region_handler import RegionHandler
+from .region._dataclass.region_result import RegionResult
+from .region._errors.region_detection_error import RegionDetectionError
+from .utils.ai.ocr_service import OCRService
 
 __all__ = [
     'ClassificationEngine',
@@ -59,7 +57,7 @@ __all__ = [
     'RegionHandler',
     'RegionResult',
     'RegionDetectionError',
-    'COMMON_REGIONS',
+    'OCRService',
     'BreakoutHandler',
     'AISummaryService',
     'SummaryResult',

@@ -1,789 +1,533 @@
 """
 Region Handler - Automatic Sheet Number Location Detection
-Fully automated multi-tier detection system with validation
+AI-assisted detection with PyMuPDF precision and vision-based OCR fallback
 """
-import hashlib
 import json
 import re
-from typing import Optional, List, Tuple, Dict
+from typing import List, Dict
 
 import fitz
 
-from ..utils.pdf.pdf_utils import extract_text_from_region, optimize_image_for_api
+from ..utils.pdf.pdf_utils import extract_text_from_region, extract_image_from_region, optimize_image_for_api
 from ..engine import CATEGORY_PATTERNS
-from .region_cache import RegionCache
+from ..utils.ai.ocr_service import OCRService
 from ._dataclass.region_result import RegionResult
 from ._dataclass.validation_result import ValidationResult
 from ._errors.region_detection_error import RegionDetectionError
 
-# Common sheet number locations (based on industry standards)
-# Ordered by frequency in real-world drawings
-COMMON_REGIONS = [
-    # Bottom-right corner (most common - ~70% of drawings)
-    {
-        "x_ratio": 0.85,
-        "y_ratio": 0.92,
-        "w_ratio": 0.14,
-        "h_ratio": 0.07,
-        "name": "bottom-right"
-    },
 
-    # Bottom-right tight (smaller title blocks)
-    {
-        "x_ratio": 0.90,
-        "y_ratio": 0.94,
-        "w_ratio": 0.09,
-        "h_ratio": 0.05,
-        "name": "bottom-right-tight"
-    },
+# Predefined candidate regions grouped by area
+# Multiple variants per area to account for different title block sizes
+CANDIDATE_REGIONS = {
+    "bottom-right": [
+        {"x_ratio": 0.82, "y_ratio": 0.90, "w_ratio": 0.17, "h_ratio": 0.09, "name": "br-wide"},
+        {"x_ratio": 0.85, "y_ratio": 0.92, "w_ratio": 0.14, "h_ratio": 0.07, "name": "br-standard"},
+        {"x_ratio": 0.90, "y_ratio": 0.94, "w_ratio": 0.09, "h_ratio": 0.05, "name": "br-tight"},
+        {"x_ratio": 0.70, "y_ratio": 0.90, "w_ratio": 0.29, "h_ratio": 0.09, "name": "br-extended"},
+    ],
+    "bottom-left": [
+        {"x_ratio": 0.01, "y_ratio": 0.90, "w_ratio": 0.17, "h_ratio": 0.09, "name": "bl-wide"},
+        {"x_ratio": 0.01, "y_ratio": 0.92, "w_ratio": 0.14, "h_ratio": 0.07, "name": "bl-standard"},
+        {"x_ratio": 0.01, "y_ratio": 0.94, "w_ratio": 0.09, "h_ratio": 0.05, "name": "bl-tight"},
+    ],
+    "top-right": [
+        {"x_ratio": 0.82, "y_ratio": 0.01, "w_ratio": 0.17, "h_ratio": 0.09, "name": "tr-wide"},
+        {"x_ratio": 0.85, "y_ratio": 0.01, "w_ratio": 0.14, "h_ratio": 0.07, "name": "tr-standard"},
+        {"x_ratio": 0.90, "y_ratio": 0.01, "w_ratio": 0.09, "h_ratio": 0.05, "name": "tr-tight"},
+    ],
+    "top-left": [
+        {"x_ratio": 0.01, "y_ratio": 0.01, "w_ratio": 0.17, "h_ratio": 0.09, "name": "tl-wide"},
+        {"x_ratio": 0.01, "y_ratio": 0.01, "w_ratio": 0.14, "h_ratio": 0.07, "name": "tl-standard"},
+    ],
+    "right-edge": [
+        {"x_ratio": 0.90, "y_ratio": 0.35, "w_ratio": 0.09, "h_ratio": 0.25, "name": "re-mid"},
+        {"x_ratio": 0.85, "y_ratio": 0.30, "w_ratio": 0.14, "h_ratio": 0.35, "name": "re-wide"},
+    ],
+    "bottom-center": [
+        {"x_ratio": 0.35, "y_ratio": 0.90, "w_ratio": 0.30, "h_ratio": 0.09, "name": "bc-wide"},
+        {"x_ratio": 0.40, "y_ratio": 0.92, "w_ratio": 0.20, "h_ratio": 0.07, "name": "bc-standard"},
+    ],
+}
 
-    # Title block center-right
-    {
-        "x_ratio": 0.70,
-        "y_ratio": 0.92,
-        "w_ratio": 0.20,
-        "h_ratio": 0.07,
-        "name": "title-center-right"
-    },
+# Area keyword mapping — maps AI descriptions to candidate groups
+AREA_KEYWORDS = {
+    "bottom-right":  ["bottom-right", "bottom right", "lower-right", "lower right", "br"],
+    "bottom-left":   ["bottom-left", "bottom left", "lower-left", "lower left", "bl"],
+    "top-right":     ["top-right", "top right", "upper-right", "upper right", "tr"],
+    "top-left":      ["top-left", "top left", "upper-left", "upper left", "tl"],
+    "right-edge":    ["right edge", "right side", "right margin", "vertical right"],
+    "bottom-center": ["bottom center", "bottom middle", "lower center"],
+}
 
-    # Top-right corner (some firms use this)
-    {
-        "x_ratio": 0.85,
-        "y_ratio": 0.01,
-        "w_ratio": 0.14,
-        "h_ratio": 0.07,
-        "name": "top-right"
-    },
-
-    # Bottom-left (rare but exists)
-    {
-        "x_ratio": 0.01,
-        "y_ratio": 0.92,
-        "w_ratio": 0.14,
-        "h_ratio": 0.07,
-        "name": "bottom-left"
-    },
-
-    # Right edge middle (vertical title blocks)
-    {
-        "x_ratio": 0.92,
-        "y_ratio": 0.40,
-        "w_ratio": 0.07,
-        "h_ratio": 0.20,
-        "name": "right-edge-middle"
-    },
-]
-
-# Expanded regions for AI to consider (quadrants)
-AI_SEARCH_QUADRANTS = [
-    {"name": "bottom-right", "x_ratio": 0.60, "y_ratio": 0.75, "w_ratio": 0.40, "h_ratio": 0.25},
-    {"name": "bottom-left", "x_ratio": 0.00, "y_ratio": 0.75, "w_ratio": 0.40, "h_ratio": 0.25},
-    {"name": "top-right", "x_ratio": 0.60, "y_ratio": 0.00, "w_ratio": 0.40, "h_ratio": 0.25},
-    {"name": "top-left", "x_ratio": 0.00, "y_ratio": 0.00, "w_ratio": 0.40, "h_ratio": 0.25},
-    {"name": "right-strip", "x_ratio": 0.85, "y_ratio": 0.00, "w_ratio": 0.15, "h_ratio": 1.00},
-    {"name": "bottom-strip", "x_ratio": 0.00, "y_ratio": 0.85, "w_ratio": 1.00, "h_ratio": 0.15},
-]
+# Region padding added to PyMuPDF-detected text blocks (as ratio of page)
+REGION_PADDING = 0.025
 
 
 class RegionHandler:
     """
-    Fully automated sheet number region detection with validation
-    
-    Multi-tier strategy:
-    - Tier 0: Cache lookup (instant, free)
-    - Tier 1: Heuristic scan (fast, free)
-    - Tier 2: AI vision search with validation (accurate, paid)
-    - Tier 3: Smart full page search (comprehensive, free)
+    AI-assisted sheet number region detection
+
+    Phase 1 — Region Detection (once per set):
+        Path A (native text): Opus reads page → PyMuPDF locates exact text block → padded region
+        Path B (image-based):  Opus reads page + area → candidate regions → Sonnet OCR → first hit
+
+    Phase 2 — Per-page classification uses the locked region
     """
-    
-    def __init__(self, openai_api_key: str = None, cache_file: str = None):
-        self.openai_api_key = openai_api_key
-        self.cache = RegionCache(cache_file)
-        self.ai_classifier = None
-        self.total_cost = 0.0
-        
-        # Initialize AI classifier if key provided
-        if openai_api_key:
-            from ..utils.ai.ai_classifier import AIClassifier
-            self.ai_classifier = AIClassifier(api_key=openai_api_key)
+
+    def __init__(self, anthropic_api_key: str):
+        self.anthropic_api_key = anthropic_api_key
+        self.ocr              = OCRService(api_key=anthropic_api_key)
+        self.total_cost       = 0.0
 
 
-    def auto_detect_region(self, pdf_path: str, min_validation_rate: float = 0.6) -> RegionResult:
-        """
-        Fully automated region detection with validation
-        
-        Args:
-            pdf_path: Path to PDF file
-            min_validation_rate: Minimum % of pages that must validate (0.0-1.0)
-            
-        Returns:
-            RegionResult with detected region and metadata
-        """
-        
-        # Tier 0: Check cache
-        cache_key = self._get_cache_key(pdf_path)
-        if cached := self.cache.get(cache_key):
-            # Quick validation check on cached region
-            validation = self._validate_region(pdf_path, cached['region'], sample_size=3)
-            if validation.success and validation.match_rate >= min_validation_rate:
+    def auto_detect_region(self, pdf_path: str, logger=None ) -> RegionResult:
+
+        """Detect the sheet number region for a PDF set"""
+
+        doc        = fitz.open(pdf_path)
+        page_count = doc.page_count
+        doc.close()
+
+        # Pick sample pages — middle first, then spread out
+        sample_indices = self._pick_sample_pages(pdf_path, count=3)
+
+        if logger:
+            logger.info(f"Sample pages selected: {[i + 1 for i in sample_indices]}")
+
+        # Try each sample page until AI reads a sheet number
+        ai_reading = None
+        for page_idx in sample_indices:
+            ai_reading = self._ai_read_page(pdf_path, page_idx, logger=logger)
+            if ai_reading and ai_reading.get("sheet_number"):
+                break
+
+        if not ai_reading or not ai_reading.get("sheet_number"):
+            raise RegionDetectionError(
+                "AI could not identify any sheet numbers on sample pages. "
+                "This drawing set may have non-standard formatting."
+            )
+
+        sheet_number = ai_reading["sheet_number"]
+        area         = ai_reading.get("area", "bottom-right")
+
+        if logger:
+            logger.info(f"AI detected: sheet_number={sheet_number!r}, area={area!r}")
+
+        # Path A: Try native text block search
+        region = self._find_native_text_block(pdf_path, sheet_number, logger=logger)
+        if region:
+            padded = self._pad_region(region)
+            validation = self._validate_region(pdf_path, padded, logger=logger)
+
+            if logger:
+                logger.info(f"Path A (native text) — validation: {validation.match_rate:.0%}")
+
+            if validation.match_rate >= 0.5:
+
                 return RegionResult(
-                    region=cached['region'],
-                    confidence=cached['confidence'],
-                    method='cache',
-                    cost_usd=0.0,
+                    region=padded,
+                    confidence=min(0.98, validation.match_rate + 0.05),
+                    method='native_text',
+                    cost_usd=self.total_cost,
                     detected_samples=validation.extracted_numbers,
                     validation_score=validation.match_rate
                 )
-            # Cache miss - region no longer valid, continue to detection
-        
-        # Tier 1: Heuristic scan (free & fast)
-        heuristic_result = self._heuristic_detect(pdf_path, min_validation_rate)
-        if heuristic_result and heuristic_result.confidence >= 0.8:
-            self.cache.set(
-                cache_key,
-                heuristic_result.region,
-                heuristic_result.confidence,
-                'heuristic',
-                heuristic_result.detected_samples,
-                heuristic_result.validation_score
-            )
-            return heuristic_result
-        
-        # Tier 2: AI Vision with validation loop (accurate but costs)
-        if self.openai_api_key:
-            ai_result = self._ai_detect_with_validation(pdf_path, min_validation_rate)
-            if ai_result and ai_result.confidence >= 0.7:
-                self.cache.set(
-                    cache_key,
-                    ai_result.region,
-                    ai_result.confidence,
-                    ai_result.method,
-                    ai_result.detected_samples,
-                    ai_result.validation_score
-                )
-                return ai_result
-        
-        # Tier 3: Smart full page search (last resort)
-        fallback_result = self._smart_full_page_search(pdf_path)
-        if fallback_result:
-            self.cache.set(
-                cache_key,
-                fallback_result.region,
-                fallback_result.confidence,
-                'full_ocr',
-                fallback_result.detected_samples,
-                fallback_result.validation_score
-            )
-            return fallback_result
-        
-        # Failed completely
+
+        # Path B: Image-based — OCR candidate regions
+        if logger:
+            logger.info(f"Path B (OCR) — scanning candidates for area: {area!r}")
+
+        candidates = self._get_candidates_for_area(area)
+
+        for candidate in candidates:
+            ocr_result = self._ocr_candidate_region(pdf_path, candidate, sample_indices[0], logger=logger)
+
+            if ocr_result:
+                padded     = self._pad_region(candidate)
+                validation = self._validate_region_ocr(pdf_path, padded, logger=logger)
+
+                if logger:
+                    logger.info(f"  Hit on {candidate.get('name', '?')} — validation: {validation.match_rate:.0%}")
+
+                if validation.match_rate >= 0.4:
+
+                    return RegionResult(
+                        region=padded,
+                        confidence=min(0.95, validation.match_rate + 0.05),
+                        method='ocr_candidate',
+                        cost_usd=self.total_cost,
+                        detected_samples=validation.extracted_numbers,
+                        validation_score=validation.match_rate
+                    )
+
+        # All paths exhausted
         raise RegionDetectionError(
-            "Could not automatically detect sheet number location. "
-            "This drawing set may have non-standard formatting or no valid sheet numbers."
+            "Could not lock a sheet number region via native text or OCR. "
+            "This drawing set may have non-standard formatting."
         )
 
 
-    @staticmethod
-    def _get_cache_key(pdf_path: str) -> str:
-        """
-        Generate cache key based on PDF fingerprint
-        
-        Same architect/firm = same sheet number location
-        """
-        doc = fitz.open(pdf_path)
-        metadata = doc.metadata or {}
-        
-        # Build fingerprint from metadata and page characteristics
-        key_parts = [
-            metadata.get('creator', 'unknown'),
-            metadata.get('producer', 'unknown'),
-            f"{doc[0].rect.width:.1f}x{doc[0].rect.height:.1f}",
-        ]
-        
+    # ── AI Page Reading (Opus) ──────────────────────────────────────────────
+
+    def _ai_read_page(self, pdf_path: str, page_idx: int, logger=None ) -> dict | None:
+
+        """Ask Opus to read a full page and identify sheet number + area"""
+
+        import base64
+        from anthropic import Anthropic
+
+        doc  = fitz.open(pdf_path)
+        page = doc.load_page(page_idx)
+
+        # Render at decent resolution
+        mat       = fitz.Matrix(2.0, 2.0)
+        pix       = page.get_pixmap(matrix=mat, alpha=False)
+        img_bytes = pix.tobytes(output='png')
+        img_opt   = optimize_image_for_api(img_bytes, max_dimension=2048)
         doc.close()
-        
-        cache_key = hashlib.md5('_'.join(key_parts).encode()).hexdigest()
-        return cache_key
+
+        b64    = base64.b64encode(img_opt).decode('utf-8')
+        client = Anthropic(api_key=self.anthropic_api_key)
+
+        if logger:
+            logger.info(f"  Sending page {page_idx + 1} to Opus for reading...")
+
+        response = client.messages.create(
+            model="claude-opus-4-5-20251101",
+            max_tokens=512,
+            system=(
+                "You are an expert at reading construction and architectural drawings. "
+                "Your job is to find the SHEET NUMBER on the page. "
+                "Sheet numbers use discipline prefixes like A-101, S-201, E-301, M-401, "
+                "P-501, C-101, G-001, L-101, FP-101, FS-101, LS-101, SS-101, T-101. "
+                "Separators may be hyphens, dots, or spaces (e.g. A-101, A.101, A 101, A1.01).\n\n"
+                "Sometimes, there are references to multiple sheets on a page. We only want THAT PAGES sheet title.\n"
+                "Return ONLY valid JSON, no markdown:\n"
+                '{"sheet_number": "exactly as printed", "area": "bottom-right"}\n\n'
+                "For area, use one of: bottom-right, bottom-left, top-right, top-left, "
+                "right-edge, bottom-center.\n\n"
+                "If you cannot find a sheet number, return:\n"
+                '{"sheet_number": null, "area": null}'
+            ),
+            messages=[{
+                "role": "user",
+                "content": [
+                    {
+                        "type": "image",
+                        "source": {
+                            "type": "base64",
+                            "media_type": "image/jpeg",
+                            "data": b64
+                        }
+                    },
+                    {
+                        "type": "text",
+                        "text": "Find the sheet number on this construction drawing and tell me where on the page it's located."
+                    }
+                ]
+            }]
+        )
+
+        # Cost tracking — Opus 4.5: $15/M input, $75/M output
+        cost = (response.usage.input_tokens / 1000) * 0.015 + \
+               (response.usage.output_tokens / 1000) * 0.075
+        self.total_cost += cost
+
+        # Parse response
+        text = response.content[0].text.strip()
+        if "```json" in text:
+            text = text.split("```json")[1].split("```")[0]
+        elif "```" in text:
+            text = text.split("```")[1].split("```")[0]
+
+        try:
+            result = json.loads(text.strip())
+
+            if logger:
+                logger.info(f"  Opus response: {result}")
+
+            return result
+
+        except (json.JSONDecodeError, KeyError) as e:
+            if logger:
+                logger.warning(f"  Failed to parse Opus response: {e} — raw: {text!r}")
+
+            return None
 
 
-    @staticmethod
-    def _get_sample_pages(pdf_path: str, sample_size: int = 5) -> List[int]:
-        """
-        Intelligently select sample pages, skipping likely cover sheets
-        
-        Args:
-            pdf_path: Path to PDF
-            sample_size: Number of pages to sample
-            
-        Returns:
-            List of page indices (0-indexed)
-        """
-        doc = fitz.open(pdf_path)
-        page_count = doc.page_count
-        
-        if page_count <= sample_size:
-            doc.close()
-            return list(range(page_count))
-        
-        # Skip page 0 if it looks like a cover sheet
-        start_page = 0
-        if page_count > 3:
-            first_page = doc.load_page(0)
-            first_text = first_page.get_text("text").lower()
-            
-            # Cover sheet indicators
-            cover_indicators = ['cover', 'title sheet', 'index', 'table of contents', 
-                               'drawing list', 'sheet index', 'project directory']
-            if any(indicator in first_text for indicator in cover_indicators):
-                start_page = 1
-            
-            # Also skip if first page has very little text (often a cover image)
-            if len(first_text.strip()) < 100:
-                start_page = 1
-        
-        # Sample evenly distributed pages
-        available_pages = page_count - start_page
-        if available_pages <= sample_size:
-            indices = list(range(start_page, page_count))
-        else:
-            step = available_pages / sample_size
-            indices = [start_page + int(i * step) for i in range(sample_size)]
-        
+    # ── Native Text Block Search (PyMuPDF) ──────────────────────────────────
+
+    def _find_native_text_block(self,
+            pdf_path: str,
+            sheet_number: str,
+            logger=None ) -> dict | None:
+
+        """Search PyMuPDF text blocks for the exact sheet number string"""
+
+        doc            = fitz.open(pdf_path)
+        sample_indices = self._pick_sample_pages(pdf_path, count=5)
+        found          = []
+
+        # Clean the sheet number for flexible matching
+        clean_target = re.sub(r'[\s\-.]', '', sheet_number).upper()
+
+        for page_idx in sample_indices:
+            page       = doc.load_page(page_idx)
+            page_w     = page.rect.width
+            page_h     = page.rect.height
+            blocks     = page.get_text("dict")["blocks"]
+
+            for block in blocks:
+                if block.get("type") != 0:
+                    continue
+
+                for line in block.get("lines", []):
+                    for span in line.get("spans", []):
+                        span_text  = span.get("text", "").strip()
+                        clean_span = re.sub(r'[\s\-.]', '', span_text).upper()
+
+                        if clean_target in clean_span:
+                            bbox = span["bbox"]
+                            region = {
+                                "x_ratio":  bbox[0] / page_w,
+                                "y_ratio":  bbox[1] / page_h,
+                                "w_ratio":  (bbox[2] - bbox[0]) / page_w,
+                                "h_ratio":  (bbox[3] - bbox[1]) / page_h,
+                            }
+                            found.append(region)
+
+                            if logger:
+                                logger.debug(
+                                    f"  Text block hit: page {page_idx + 1}, "
+                                    f"text={span_text!r}, region={region}"
+                                )
+
         doc.close()
-        return indices
+
+        if not found:
+            if logger:
+                logger.info(f"  No native text blocks matched {sheet_number!r}")
+
+            return None
+
+        # Average the found positions for consistency
+        avg_region = {
+            "x_ratio": sum(r["x_ratio"] for r in found) / len(found),
+            "y_ratio": sum(r["y_ratio"] for r in found) / len(found),
+            "w_ratio": sum(r["w_ratio"] for r in found) / len(found),
+            "h_ratio": sum(r["h_ratio"] for r in found) / len(found),
+        }
+
+        if logger:
+            logger.info(f"  Averaged region from {len(found)} hits: {avg_region}")
+
+        return avg_region
 
 
-    def _validate_region(self, pdf_path: str, region: Dict[str, float], 
-                         sample_size: int = 5) -> ValidationResult:
-        """
-        Validate that a region actually contains sheet numbers
-        
-        Args:
-            pdf_path: Path to PDF
-            region: Region to validate
-            sample_size: Number of pages to test
-            
-        Returns:
-            ValidationResult with match statistics
-        """
-        doc = fitz.open(pdf_path)
-        sample_indices = self._get_sample_pages(pdf_path, sample_size)
-        
-        matched_pages = 0
+    # ── OCR Candidate Scanning ──────────────────────────────────────────────
+
+    def _ocr_candidate_region(self,
+            pdf_path: str,
+            region: dict,
+            page_idx: int,
+            logger=None ) -> str | None:
+
+        """Render a candidate region and OCR it, return text if sheet number found"""
+
+        doc       = fitz.open(pdf_path)
+        page      = doc.load_page(page_idx)
+        img_bytes = extract_image_from_region(page, region, zoom=4.0, format='PNG')
+        doc.close()
+
+        ocr_text = self.ocr.extract_text(img_bytes, media_type="image/png")
+
+        if logger:
+            logger.debug(f"    OCR [{region.get('name', '?')}]: {ocr_text!r}")
+
+        if self._extract_sheet_number(ocr_text):
+
+            return ocr_text
+
+        return None
+
+
+    # ── Validation ──────────────────────────────────────────────────────────
+
+    def _validate_region(self, pdf_path: str, region: dict,
+            sample_size: int = 5,
+            logger=None ) -> ValidationResult:
+
+        """Validate region using native text extraction"""
+
+        doc            = fitz.open(pdf_path)
+        sample_indices = self._pick_sample_pages(pdf_path, count=sample_size)
+
+        matched           = 0
         extracted_numbers = []
-        failed_pages = []
-        
+        failed_pages      = []
+
         for page_idx in sample_indices:
             page = doc.load_page(page_idx)
             text = extract_text_from_region(page, region)
-            
+
             if sheet_num := self._extract_sheet_number(text):
-                matched_pages += 1
+                matched += 1
                 extracted_numbers.append(sheet_num)
             else:
                 failed_pages.append(page_idx)
-        
+
         doc.close()
-        
-        match_rate = matched_pages / len(sample_indices) if sample_indices else 0.0
-        
+
+        match_rate = matched / len(sample_indices) if sample_indices else 0.0
+
+        if logger:
+            logger.debug(f"  Native validation: {matched}/{len(sample_indices)} pages matched")
+
         return ValidationResult(
             success=match_rate >= 0.5,
             match_rate=match_rate,
-            matched_pages=matched_pages,
+            matched_pages=matched,
             total_pages=len(sample_indices),
             extracted_numbers=extracted_numbers,
             failed_pages=failed_pages
         )
 
 
-    def _heuristic_detect(self, pdf_path: str, min_validation_rate: float) -> Optional[RegionResult]:
-        """
-        Tier 1: Test common locations with text extraction and validation
-        
-        Fast and free - works for 85-90% of typical drawings
-        """
-        doc = fitz.open(pdf_path)
-        sample_indices = self._get_sample_pages(pdf_path, sample_size=5)
-        
-        best_result = None
-        best_match_rate = 0.0
-        
-        # Test each common region
-        for region_template in COMMON_REGIONS:
-            matches = []
-            
-            for page_idx in sample_indices:
-                page = doc.load_page(page_idx)
-                text = extract_text_from_region(page, region_template)
-                
-                if sheet_num := self._extract_sheet_number(text):
-                    matches.append(sheet_num)
-            
-            match_rate = len(matches) / len(sample_indices) if sample_indices else 0.0
-            
-            # Track best result even if below threshold
-            if match_rate > best_match_rate:
-                best_match_rate = match_rate
-                best_result = RegionResult(
-                    region={
-                        'x_ratio': region_template['x_ratio'],
-                        'y_ratio': region_template['y_ratio'],
-                        'w_ratio': region_template['w_ratio'],
-                        'h_ratio': region_template['h_ratio']
-                    },
-                    confidence=min(0.95, match_rate + 0.1),  # Boost confidence slightly
-                    method='heuristic',
-                    cost_usd=0.0,
-                    detected_samples=matches,
-                    validation_score=match_rate
-                )
-            
-            # If we found a great match, return early
-            if match_rate >= 0.8:
-                doc.close()
-                return best_result
-        
+    def _validate_region_ocr(self, pdf_path: str, region: dict,
+            sample_size: int = 5,
+            logger=None ) -> ValidationResult:
+
+        """Validate region using Sonnet OCR instead of native text"""
+
+        doc            = fitz.open(pdf_path)
+        sample_indices = self._pick_sample_pages(pdf_path, count=sample_size)
+
+        matched           = 0
+        extracted_numbers = []
+        failed_pages      = []
+
+        for page_idx in sample_indices:
+            page      = doc.load_page(page_idx)
+            img_bytes = extract_image_from_region(page, region, zoom=4.0, format='PNG')
+            ocr_text  = self.ocr.extract_text(img_bytes, media_type="image/png")
+
+            if sheet_num := self._extract_sheet_number(ocr_text):
+                matched += 1
+                extracted_numbers.append(sheet_num)
+            else:
+                failed_pages.append(page_idx)
+
         doc.close()
-        
-        # Return best result if it meets minimum threshold
-        if best_result and best_match_rate >= min_validation_rate:
-            return best_result
-        
-        return None
+
+        match_rate = matched / len(sample_indices) if sample_indices else 0.0
+
+        if logger:
+            logger.debug(f"  OCR validation: {matched}/{len(sample_indices)} pages matched")
+
+        return ValidationResult(
+            success=match_rate >= 0.5,
+            match_rate=match_rate,
+            matched_pages=matched,
+            total_pages=len(sample_indices),
+            extracted_numbers=extracted_numbers,
+            failed_pages=failed_pages
+        )
+
+
+    # ── Helpers ──────────────────────────────────────────────────────────────
+
+    @staticmethod
+    def _pick_sample_pages(pdf_path: str, count: int = 3 ) -> list[int]:
+
+        """Pick sample pages from middle of the set, skipping likely covers"""
+
+        doc        = fitz.open(pdf_path)
+        page_count = doc.page_count
+
+        if page_count <= count:
+            doc.close()
+
+            return list(range(page_count))
+
+        # Skip page 0 if it looks like a cover
+        start = 0
+        if page_count > 3:
+            first_text = doc.load_page(0).get_text("text").lower()
+            cover_words = ['cover', 'title sheet', 'index', 'table of contents',
+                           'drawing list', 'sheet index', 'project directory']
+
+            if any(w in first_text for w in cover_words) or len(first_text.strip()) < 100:
+                start = 1
+
+        doc.close()
+
+        # Distribute samples across the available range
+        available = page_count - start
+        if available <= count:
+
+            return list(range(start, page_count))
+
+        step    = available / (count + 1)
+        indices = [start + int(step * (i + 1)) for i in range(count)]
+
+        return indices
 
 
     @staticmethod
-    def _extract_sheet_number(text: str) -> Optional[str]:
-        """Check if text contains a valid sheet number"""
+    def _extract_sheet_number(text: str ) -> str | None:
+
+        """Check if text contains a valid sheet number pattern"""
+
         if not text or not text.strip():
+
             return None
-        
-        # Try each pattern
+
         for category, pattern in CATEGORY_PATTERNS.items():
             match = re.search(pattern, text, re.IGNORECASE)
             if match:
+
                 return match.group(0)
-        
+
         return None
 
 
-    def _ai_detect_with_validation(self, pdf_path: str, min_validation_rate: float,
-                                    max_retries: int = 3) -> Optional[RegionResult]:
-        """
-        Tier 2: Use AI vision with validation loop
-        
-        Two-stage approach:
-        1. Coarse detection - identify which area of the page
-        2. Fine detection - get precise coordinates
-        3. Validation - verify it actually works
-        4. Retry with feedback if validation fails
-        """
-        doc = fitz.open(pdf_path)
-        page_count = doc.page_count
-        sample_indices = self._get_sample_pages(pdf_path, sample_size=3)
-        
-        # Stage 1: Render sample pages for AI analysis
-        images = []
-        for idx in sample_indices:
-            page = doc.load_page(idx)
-            mat = fitz.Matrix(2.0, 2.0)  # 2x zoom = ~144 DPI
-            pix = page.get_pixmap(matrix=mat, alpha=False)
-            img_bytes = pix.tobytes(output='png')
-            img_optimized = optimize_image_for_api(img_bytes, max_dimension=1500)
-            images.append(img_optimized)
-        
-        doc.close()
-        
-        previous_attempts = []
-        
-        for attempt in range(max_retries):
-            try:
-                # Call AI to detect region
-                ai_region = self._call_ai_region_detection(
-                    images, 
-                    previous_attempts=previous_attempts
-                )
-                
-                if not ai_region:
-                    continue
-                
-                # Validate the result
-                validation = self._validate_region(pdf_path, ai_region['region'], sample_size=5)
-                
-                if validation.success and validation.match_rate >= min_validation_rate:
-                    return RegionResult(
-                        region=ai_region['region'],
-                        confidence=min(0.95, validation.match_rate + 0.1),
-                        method='ai_vision_validated',
-                        cost_usd=ai_region['cost'],
-                        detected_samples=validation.extracted_numbers,
-                        validation_score=validation.match_rate
-                    )
-                
-                # Validation failed - record for retry
-                previous_attempts.append({
-                    'region': ai_region['region'],
-                    'match_rate': validation.match_rate,
-                    'failed_pages': validation.failed_pages,
-                    'ai_detected_numbers': ai_region.get('detected_numbers', []),
-                    'actual_extracted': validation.extracted_numbers
-                })
-                
-            except Exception as e:
-                print(f"AI detection attempt {attempt + 1} failed: {e}")
-                continue
-        
-        # All retries exhausted - return best attempt if any
-        if previous_attempts:
-            best_attempt = max(previous_attempts, key=lambda x: x['match_rate'])
-            if best_attempt['match_rate'] >= min_validation_rate * 0.5:  # Lower threshold for partial success
-                return RegionResult(
-                    region=best_attempt['region'],
-                    confidence=best_attempt['match_rate'],
-                    method='ai_vision_partial',
-                    cost_usd=self.total_cost,
-                    detected_samples=best_attempt['actual_extracted'],
-                    validation_score=best_attempt['match_rate']
-                )
-        
-        return None
+    @staticmethod
+    def _get_candidates_for_area(area: str ) -> list[dict]:
 
+        """Map an AI-reported area string to candidate regions"""
 
-    def _call_ai_region_detection(self, images: List[bytes], 
-                                   previous_attempts: List[Dict] = None) -> Optional[Dict]:
-        """
-        Call OpenAI to detect region from images with detailed prompting
-        
-        Args:
-            images: List of page images
-            previous_attempts: Previous failed attempts for context
-            
-        Returns:
-            Dict with 'region', 'cost', 'detected_numbers'
-        """
-        import base64
-        from openai import OpenAI
-        
-        client = OpenAI(api_key=self.openai_api_key)
-        encoded_images = [base64.b64encode(img).decode('utf-8') for img in images]
-        
-        # Build detailed prompt
-        prompt = self._build_region_detection_prompt(previous_attempts)
-        
-        # Build message content
-        content = [{"type": "text", "text": prompt}]
-        for i, img_b64 in enumerate(encoded_images):
-            content.append({
-                "type": "text",
-                "text": f"\n--- Page {i + 1} of {len(encoded_images)} ---"
-            })
-            content.append({
-                "type": "image_url",
-                "image_url": {
-                    "url": f"data:image/png;base64,{img_b64}",
-                    "detail": "high"
-                }
-            })
-        
-        response = client.chat.completions.create(
-            model="gpt-4o",
-            messages=[
-                {
-                    "role": "system",
-                    "content": """You are an expert at analyzing construction and architectural drawings.
-Your task is to precisely locate the sheet number identifier on drawing pages.
+        area_lower = area.lower().strip()
 
-Sheet numbers follow standard discipline prefixes:
-- A-### = Architectural (e.g., A-101, A1.01, A.2.03)
-- S-### = Structural (e.g., S-201, S1.02)
-- E-### = Electrical (e.g., E-301)
-- M-### = Mechanical (e.g., M-401)
-- P-### = Plumbing (e.g., P-501)
-- C-### = Civil (e.g., C-101)
-- G-### = General (e.g., G-001)
-- L-### = Landscape (e.g., L-101)
-- FP-### = Fire Protection
-- And similar patterns...
+        # Direct match
+        if area_lower in CANDIDATE_REGIONS:
 
-The sheet number is typically located in the title block, usually in a corner of the drawing.
-It should be consistent across all pages in a set."""
-                },
-                {
-                    "role": "user",
-                    "content": content
-                }
-            ],
-            max_tokens=1500,
-            temperature=0.1,
-            response_format={"type": "json_object"}
-        )
-        
-        # Parse response
-        result_text = response.choices[0].message.content
-        result = json.loads(result_text)
-        
-        # Calculate cost
-        cost = (response.usage.prompt_tokens / 1000) * 0.005 + \
-               (response.usage.completion_tokens / 1000) * 0.015
-        self.total_cost += cost
-        
-        # Validate the returned coordinates are sensible
-        try:
-            region = {
-                'x_ratio': float(result['x_ratio']),
-                'y_ratio': float(result['y_ratio']),
-                'w_ratio': float(result['w_ratio']),
-                'h_ratio': float(result['h_ratio'])
-            }
-            
-            # Sanity checks
-            for key, value in region.items():
-                if not (0.0 <= value <= 1.0):
-                    print(f"Warning: AI returned invalid {key}={value}, clamping to 0-1")
-                    region[key] = max(0.0, min(1.0, value))
-            
-            # Ensure width/height are reasonable (not too small or too large)
-            if region['w_ratio'] < 0.02:
-                region['w_ratio'] = 0.05  # Minimum 5% width
-            if region['h_ratio'] < 0.02:
-                region['h_ratio'] = 0.05  # Minimum 5% height
-            if region['w_ratio'] > 0.5:
-                region['w_ratio'] = 0.3  # Maximum 30% width
-            if region['h_ratio'] > 0.5:
-                region['h_ratio'] = 0.2  # Maximum 20% height
-            
-            return {
-                'region': region,
-                'cost': cost,
-                'detected_numbers': result.get('detected_numbers', []),
-                'location_description': result.get('location_description', ''),
-                'confidence': float(result.get('confidence', 0.8))
-            }
-            
-        except (KeyError, ValueError, TypeError) as e:
-            print(f"Failed to parse AI response: {e}")
-            return None
+            return CANDIDATE_REGIONS[area_lower]
+
+        # Keyword fuzzy match
+        for area_key, keywords in AREA_KEYWORDS.items():
+            if any(kw in area_lower for kw in keywords):
+
+                return CANDIDATE_REGIONS[area_key]
+
+        # Default: try all bottom-right candidates (most common)
+        return CANDIDATE_REGIONS["bottom-right"]
 
 
     @staticmethod
-    def _build_region_detection_prompt(previous_attempts: List[Dict] = None) -> str:
-        """Build detailed prompt for region detection"""
-        
-        base_prompt = """Analyze these construction drawing pages to find the SHEET NUMBER location.
+    def _pad_region(region: dict, padding: float = REGION_PADDING ) -> dict:
 
-TASK: Identify the bounding box that contains the sheet number (e.g., A-101, S-202, E-301).
+        """Add generous padding to a region, clamped to page bounds"""
 
-COORDINATE SYSTEM:
-- x_ratio: Distance from LEFT edge (0.0 = left edge, 1.0 = right edge)
-- y_ratio: Distance from TOP edge (0.0 = top edge, 1.0 = bottom edge)
-- w_ratio: Width of the box as fraction of page width
-- h_ratio: Height of the box as fraction of page height
-
-EXAMPLE COORDINATES:
-- Bottom-right corner: x_ratio=0.88, y_ratio=0.93, w_ratio=0.10, h_ratio=0.05
-- Top-right corner: x_ratio=0.88, y_ratio=0.02, w_ratio=0.10, h_ratio=0.05
-
-IMPORTANT GUIDELINES:
-1. The sheet number is usually in the TITLE BLOCK (typically a bordered area in a corner)
-2. Look for text matching patterns like: A-101, S.201, M1.02, E-301A, etc.
-3. The region should be TIGHT around the sheet number - not the entire title block
-4. Add a small buffer (~1-2% of page) around the number for OCR tolerance
-5. The location should be CONSISTENT across all pages shown
-
-OUTPUT FORMAT (JSON only, no markdown):
-{
-    "x_ratio": 0.88,
-    "y_ratio": 0.93,
-    "w_ratio": 0.10,
-    "h_ratio": 0.05,
-    "confidence": 0.95,
-    "detected_numbers": ["A-101", "A-102", "A-103"],
-    "location_description": "bottom-right corner of title block"
-}"""
-
-        # Add context from previous failed attempts
-        if previous_attempts:
-            feedback = "\n\nPREVIOUS ATTEMPTS THAT FAILED VALIDATION:"
-            for i, attempt in enumerate(previous_attempts):
-                feedback += f"""
-                
-Attempt {i + 1}:
-- Region tried: x={attempt['region']['x_ratio']:.2f}, y={attempt['region']['y_ratio']:.2f}, w={attempt['region']['w_ratio']:.2f}, h={attempt['region']['h_ratio']:.2f}
-- Match rate: {attempt['match_rate']:.0%} (need at least 60%)
-- AI detected: {attempt.get('ai_detected_numbers', [])}
-- Actually extracted: {attempt.get('actual_extracted', [])}
-- Failed on pages: {attempt.get('failed_pages', [])}"""
-            
-            feedback += """
-
-Based on these failed attempts, please:
-1. Adjust the coordinates to better capture the sheet number
-2. Consider if the sheet number might be in a different location
-3. Make sure the region is large enough to capture text reliably
-4. The region may need to be larger or positioned differently"""
-            
-            base_prompt += feedback
-        
-        return base_prompt
-
-
-    def _smart_full_page_search(self, pdf_path: str) -> Optional[RegionResult]:
-        """
-        Tier 3: Comprehensive full page search with intelligent prioritization
-        
-        Strategy:
-        1. Extract all text blocks with positions from multiple pages
-        2. Find sheet number patterns
-        3. Calculate consistent region across pages
-        4. Validate result
-        """
-        doc = fitz.open(pdf_path)
-        sample_indices = self._get_sample_pages(pdf_path, sample_size=5)
-        
-        # Collect all sheet number locations across pages
-        found_locations = []  # List of (page_idx, bbox, sheet_number)
-        
-        for page_idx in sample_indices:
-            page = doc.load_page(page_idx)
-            page_width = page.rect.width
-            page_height = page.rect.height
-            
-            blocks = page.get_text("dict")["blocks"]
-            
-            for block in blocks:
-                if block.get("type") != 0:  # Not a text block
-                    continue
-                    
-                for line in block.get("lines", []):
-                    for span in line.get("spans", []):
-                        text = span.get("text", "")
-                        if sheet_num := self._extract_sheet_number(text):
-                            bbox = span["bbox"]
-                            
-                            # Convert to ratios
-                            location = {
-                                'x_ratio': bbox[0] / page_width,
-                                'y_ratio': bbox[1] / page_height,
-                                'x1_ratio': bbox[2] / page_width,
-                                'y1_ratio': bbox[3] / page_height
-                            }
-                            
-                            found_locations.append((page_idx, location, sheet_num))
-        
-        doc.close()
-        
-        if not found_locations:
-            return None
-        
-        # Find the most consistent location across pages
-        # Group by approximate position
-        position_groups = self._group_locations_by_position(found_locations)
-        
-        if not position_groups:
-            return None
-        
-        # Take the largest group (most pages agree on this location)
-        best_group = max(position_groups, key=len)
-        
-        # Calculate average region with padding
-        region = self._calculate_average_region(best_group)
-        
-        # Validate
-        validation = self._validate_region(pdf_path, region, sample_size=5)
-        
-        if validation.match_rate < 0.3:
-            return None
-        
-        return RegionResult(
-            region=region,
-            confidence=min(0.85, validation.match_rate + 0.1),
-            method='full_ocr',
-            cost_usd=0.0,
-            detected_samples=validation.extracted_numbers,
-            validation_score=validation.match_rate
-        )
-
-
-    @staticmethod
-    def _group_locations_by_position(locations: List[Tuple],
-                                     tolerance: float = 0.1) -> List[List[Tuple]]:
-        """
-        Group sheet number locations by approximate position
-        
-        Args:
-            locations: List of (page_idx, bbox_ratios, sheet_number)
-            tolerance: Maximum position difference to be considered same group
-            
-        Returns:
-            List of groups, each group is a list of locations
-        """
-        if not locations:
-            return []
-        
-        groups = []
-        used = set()
-        
-        for i, loc in enumerate(locations):
-            if i in used:
-                continue
-            
-            group = [loc]
-            used.add(i)
-            
-            # Find similar locations
-            for j, other in enumerate(locations):
-                if j in used:
-                    continue
-                
-                # Compare center positions
-                x1 = (loc[1]['x_ratio'] + loc[1]['x1_ratio']) / 2
-                y1 = (loc[1]['y_ratio'] + loc[1]['y1_ratio']) / 2
-                x2 = (other[1]['x_ratio'] + other[1]['x1_ratio']) / 2
-                y2 = (other[1]['y_ratio'] + other[1]['y1_ratio']) / 2
-                
-                if abs(x1 - x2) <= tolerance and abs(y1 - y2) <= tolerance:
-                    group.append(other)
-                    used.add(j)
-            
-            groups.append(group)
-        
-        return groups
-
-
-    @staticmethod
-    def _calculate_average_region(locations: List[Tuple],
-                                  padding: float = 0.02) -> Dict[str, float]:
-        """
-        Calculate average region from a group of locations with padding
-        
-        Args:
-            locations: List of (page_idx, bbox_ratios, sheet_number)
-            padding: Padding to add around the region (as ratio)
-            
-        Returns:
-            Region dict with x_ratio, y_ratio, w_ratio, h_ratio
-        """
-        # Calculate bounds
-        min_x = min(loc[1]['x_ratio'] for loc in locations)
-        min_y = min(loc[1]['y_ratio'] for loc in locations)
-        max_x = max(loc[1]['x1_ratio'] for loc in locations)
-        max_y = max(loc[1]['y1_ratio'] for loc in locations)
-        
-        # Add padding
-        min_x = max(0.0, min_x - padding)
-        min_y = max(0.0, min_y - padding)
-        max_x = min(1.0, max_x + padding)
-        max_y = min(1.0, max_y + padding)
-        
         return {
-            'x_ratio': min_x,
-            'y_ratio': min_y,
-            'w_ratio': max_x - min_x,
-            'h_ratio': max_y - min_y
+            "x_ratio": max(0.0, region["x_ratio"] - padding),
+            "y_ratio": max(0.0, region["y_ratio"] - padding),
+            "w_ratio": min(1.0, region["w_ratio"] + padding * 2),
+            "h_ratio": min(1.0, region["h_ratio"] + padding * 2),
         }
 
 
     def get_total_cost(self) -> float:
+
         """Get total API cost for this session"""
+
         return self.total_cost
