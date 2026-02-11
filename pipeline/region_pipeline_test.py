@@ -1,4 +1,4 @@
-"""Region detection pipeline test — saves debug images and logs"""
+"""Full pipeline test — region detection + parallel classification"""
 import sys
 import logging
 import time
@@ -15,16 +15,18 @@ sys.path.insert(0, str(ROOT))
 
 load_dotenv(ROOT / '.env')
 
-from src.plan_classification.region.region_handler import RegionHandler
+from src.plan_classification.engine import ClassificationEngine
+from src.plan_classification.pipeline_config import PipelineConfig
 from src.plan_classification.utils.pdf.pdf_utils import extract_text_from_region, extract_image_from_region
 from src.plan_classification.utils.ai.ocr_service import OCRService
 
 # ── Config ──────────────────────────────────────────────────────────────────
-PDF_PATH    = Path(r"C:\Users\tylere.METALSFAB\Desktop\Dev stuff\PDFClassifyMCP\Testing\REV-M_2026-01-19_COMBINED.pdf")
-DEBUG_DIR   = ROOT / "debug"
-IMG_DIR     = DEBUG_DIR / "region_img"
-LOG_FILE    = DEBUG_DIR / "region_detection.log"
-API_KEY     = os.getenv("ANTHROPIC_API_KEY")
+PDF_PATH  = Path(r"C:\Users\tylere.METALSFAB\Desktop\Dev stuff\PDFClassifyMCP\Testing\2026-02-04-REV3-COMBINED.pdf")
+DEBUG_DIR = ROOT / "debug"
+IMG_DIR   = DEBUG_DIR / "region_img"
+TIMESTAMP = datetime.now().strftime("%Y%m%d_%H%M%S")
+LOG_FILE  = DEBUG_DIR / f"pipeline{TIMESTAMP}.log"
+API_KEY   = os.getenv("ANTHROPIC_API_KEY")
 # ────────────────────────────────────────────────────────────────────────────
 
 
@@ -35,7 +37,7 @@ def setup_logging() -> logging.Logger:
     DEBUG_DIR.mkdir(parents=True, exist_ok=True)
     IMG_DIR.mkdir(parents=True, exist_ok=True)
 
-    logger = logging.getLogger("region_test")
+    logger = logging.getLogger("pipeline_test")
     logger.setLevel(logging.DEBUG)
     logger.handlers.clear()
 
@@ -51,44 +53,6 @@ def setup_logging() -> logging.Logger:
     return logger
 
 
-def save_region_images(
-        pdf_path: Path,
-        region: dict,
-        ocr: OCRService,
-        logger: logging.Logger ) -> None:
-
-    """Extract and save the detected region from every page, with native text and OCR"""
-
-    doc        = fitz.open(str(pdf_path))
-    page_count = doc.page_count
-
-    logger.info(f"Saving region images for {page_count} pages...")
-
-    for page_num in range(page_count):
-        page        = doc.load_page(page_num)
-        img_bytes   = extract_image_from_region(page, region, zoom=4.0, format='PNG')
-        native_text = extract_text_from_region(page, region)
-        out_path    = IMG_DIR / f"page_{page_num + 1:03d}.png"
-
-        with open(out_path, 'wb') as f:
-            f.write(img_bytes)
-
-        # OCR the region if no native text
-        ocr_text = ""
-        if not native_text.strip():
-            ocr_text = ocr.extract_text(img_bytes, media_type="image/png")
-
-        display_text = native_text.strip() or ocr_text.strip() or "(empty)"
-        source       = "native" if native_text.strip() else ("ocr" if ocr_text.strip() else "none")
-
-        logger.debug(
-            f"  Page {page_num + 1:3d} | [{source:6s}] {display_text!r:50s} | {out_path.name}"
-        )
-
-    doc.close()
-    logger.info(f"All region images saved to {IMG_DIR}")
-
-
 def run() -> None:
 
     """Main test entrypoint"""
@@ -96,7 +60,7 @@ def run() -> None:
     logger = setup_logging()
 
     logger.info("=" * 70)
-    logger.info("REGION DETECTION PIPELINE TEST")
+    logger.info("FULL PIPELINE TEST")
     logger.info(f"PDF:       {PDF_PATH}")
     logger.info(f"Timestamp: {datetime.now().isoformat()}")
     logger.info("=" * 70)
@@ -106,7 +70,7 @@ def run() -> None:
         sys.exit(1)
 
     if not API_KEY:
-        logger.error("ANTHROPIC_API_KEY not set — cannot proceed")
+        logger.error("ANTHROPIC_API_KEY not set")
         sys.exit(1)
 
     # Page count
@@ -115,31 +79,62 @@ def run() -> None:
     doc.close()
     logger.info(f"Page count: {page_count}")
 
-    # Run detection
-    handler = RegionHandler(anthropic_api_key=API_KEY)
-    ocr     = OCRService(api_key=API_KEY)
+    # Build engine
+    config = PipelineConfig(anthropic_api_key=API_KEY)
+    engine = ClassificationEngine(config)
 
+    # Run full pipeline
     logger.info("-" * 70)
-    logger.info("Starting region detection...")
+    logger.info("Phase 1: Region detection...")
     t_start = time.perf_counter()
 
-    result = handler.auto_detect_region(str(PDF_PATH), logger=logger)
+    results = engine.classify(str(PDF_PATH), logger=logger)
 
     elapsed = time.perf_counter() - t_start
-    logger.info(f"Detection complete in {elapsed:.2f}s")
+
+    # ── Summary ─────────────────────────────────────────────────────────
+    logger.info("=" * 70)
+    logger.info("RESULTS")
     logger.info("-" * 70)
 
-    # Log results
-    logger.info(f"Method:           {result.method}")
-    logger.info(f"Confidence:       {result.confidence:.2%}")
-    logger.info(f"Validation score: {result.validation_score:.2%}")
-    logger.info(f"Cost:             ${result.cost_usd:.4f}")
-    logger.info(f"Region:           {result.region}")
-    logger.info(f"Samples:          {result.detected_samples}")
+    # Method breakdown
+    methods = {}
+    disciplines = {}
+    for r in results:
+        methods[r.method]         = methods.get(r.method, 0) + 1
+        disc                      = r.discipline or "Unclassified"
+        disciplines[disc]         = disciplines.get(disc, 0) + 1
 
-    # Save debug images with OCR
+    logger.info("By method:")
+    for method, count in sorted(methods.items()):
+        logger.info(f"  {method:15s} {count:4d} pages")
+
+    logger.info("By discipline:")
+    for disc, count in sorted(disciplines.items()):
+        logger.info(f"  {disc:20s} {count:4d} pages")
+
+    # Per-page detail
     logger.info("-" * 70)
-    save_region_images(PDF_PATH, result.region, ocr, logger)
+    logger.info("Page details:")
+    for r in results:
+        logger.info(
+            f"  Page {r.page_index + 1:3d} | "
+            f"{r.method:12s} | "
+            f"{r.sheet_number or '---':12s} | "
+            f"{r.discipline or 'Unclassified':20s} | "
+            f"conf={r.confidence:.0%}"
+        )
+
+    # Timing breakdown
+    logger.info("-" * 70)
+    logger.info("TIMING BREAKDOWN")
+    for step, duration in engine.timings.items():
+        logger.info(f"  {step:25s} {duration:6.2f}s")
+    logger.info(f"  {'TOTAL':25s} {elapsed:6.2f}s")
+
+    # Cost
+    logger.info("-" * 70)
+    logger.info(f"Total cost: ${engine.total_cost:.4f}")
 
     logger.info("=" * 70)
     logger.info("DONE")

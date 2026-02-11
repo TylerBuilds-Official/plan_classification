@@ -1,129 +1,129 @@
-[12:48:52] INFO     ======================================================================
-[12:48:52] INFO     REGION DETECTION PIPELINE TEST
-[12:48:52] INFO     PDF:       C:\Users\tylere.METALSFAB\Desktop\Dev stuff\PDFClassifyMCP\Testing\REV-M_2026-01-19_COMBINED.pdf
-[12:48:52] INFO     Timestamp: 2026-02-11T12:48:52.732200
-[12:48:52] INFO     ======================================================================
-[12:48:52] INFO     Page count: 99
-[12:48:52] INFO     ----------------------------------------------------------------------
-[12:48:52] INFO     Starting region detection...
-[12:48:52] INFO     Sample pages selected: [26, 51, 75]
-[12:48:53] INFO       Sending page 26 to Opus for reading...
-[12:48:56] INFO       Opus response: {'sheet_number': 'C-504', 'area': 'bottom-right'}
-[12:48:56] INFO     AI detected: sheet_number='C-504', area='bottom-right'
-[12:48:56] INFO       No native text blocks matched 'C-504'
-[12:48:56] INFO     Path B (OCR) — scanning candidates for area: 'bottom-right'
-[12:48:58] DEBUG        OCR [br-wide]: '*\nHURT&PROFFIT\nSHEET NO.\nREV.\nC-504\n----'
-[12:49:25] DEBUG      OCR validation: 5/5 pages matched
-[12:49:25] INFO       Hit on br-wide — validation: 100%
-[12:49:25] INFO     Detection complete in 32.22s
-[12:49:25] INFO     ----------------------------------------------------------------------
-[12:49:25] INFO     Method:           ocr_candidate
-[12:49:25] INFO     Confidence:       95.00%
-[12:49:25] INFO     Validation score: 100.00%
-[12:49:25] INFO     Cost:             $0.0290
-[12:49:25] INFO     Region:           {'x_ratio': 0.7949999999999999, 'y_ratio': 0.875, 'w_ratio': 0.22000000000000003, 'h_ratio': 0.14}
-[12:49:25] INFO     Samples:          ['C-101', 'A-132', 'A-431', 'A-621', 'E1']
-[12:49:25] INFO     ----------------------------------------------------------------------
-[12:49:25] INFO     Saving region images for 99 pages...
-[12:49:28] DEBUG      Page   1 | [ocr   ] 'Sheet Size:                    E1\n\nSheet Title:\n\nCOVER SHEET\n\n\nSheet No:\n\nG-001' | page_001.png
-[12:49:28] DEBUG      Page   2 | [native] 'Sheet No:\nSheet Title:\nSheet Size:\nE1\nG-002\nSHEET INDEX' | page_002.png
-[12:49:30] DEBUG      Page   3 | [ocr   ] 'Sheet Size:\nE1\n\nSheet Title:\n\nCODE REVIEW\n\nSheet No:\n\nG-011' | page_003.png
-[12:49:33] DEBUG      Page   4 | [ocr   ] 'Sheet Size:\nE1\n\nSheet Title:\n\nCODE REVIEW\n\nSheet No:\n\nG-012' | page_004.png
-[12:49:37] DEBUG      Page   5 | [ocr   ] 'Sheet Size:                    E1\n\nSheet Title:\n\nARCHITECTURAL\nSITE PLAN\n\n\n\n\nSheet No:\n\n\n\nARCHITECTURAL SITE PLAN      1        G-021\n                             1" = 60\'-0"   A-201 G-021' | page_005.png
-[12:49:43] DEBUG      Page   6 | [ocr   ] 'FIRE DEPARTMENT INGRESS\n\nEMERGENCY DOOR EXIT SIGN\n\nFE\nFIRE EXTINGUISHER\n\n1 HR FIRE RATED WALLS\n\n2 HR FIRE RATED WALLS\n\nEGRESS PATH\n\nINCIDENTAL OCCUPANCY\n\nSAFETY PLAN\n1\n1/16" = 1\'-0"\nA-201 G-101\n\nSheet Size:\nE1\n\nSheet Title:\n\nOVERALL LIFE\nSAFETY PLAN -\nMAIN LEVEL\n\nSheet No:\n\nG-101' | page_006.png
-[12:49:52] DEBUG      Page   7 | [ocr   ] '4.6\n\n4.7\n\nFIRE DEPARTMENT INGRESS\n\nEMERGENCY DOOR EXIT SIGN\n\nFE\nFIRE EXTINGUISHER\n\n1 HR FIRE RATED WALLS\n\n2 HR FIRE RATED WALLS\n\nEGRESS PATH\n\nSAFETY PLAN    1\n3/16" = 1\'-0"    A-201 G-102\n\nINCIDENTAL OCCUPANCY\n\nSheet Size:\nE1\n\nSheet Title:\n\nENLARGED\nLIFE SAFETY\nPLANS\n\nSheet No:\n\nG-102' | page_007.png
-[12:49:57] DEBUG      Page   8 | [ocr   ] 'Sheet Size:\nE1\n\nSheet Title:\n\nENERGY CODE\n\n1 High Impact (Tier 1)    2 Medium Impact (Tier 2)    3 Low Impact (Tier 3)\n\nPCA Riverville Storage/Warehouse                                Report date: 01/05/26\ne:                                                              Page   12 of  12\n\nSheet No:\n\nG-103' | page_008.png
-[12:50:01] DEBUG      Page   9 | [ocr   ] 'Sheet Size:\nE1\n\nSheet Title:\n\nUL\nASSEMBLIES\n\nSheet No:\n\nG-110' | page_009.png
-[12:50:08] DEBUG      Page  10 | [ocr   ] 'SIDE\nSIDE\n\n(A) CROSS SECTION\n\n430-485mm\n430-485mm\n\nHEIGHT OF\nVERTICAL BARRIER R AT\n\nHEIGHT OF COUNTER AT\nPARALLEL APPROACH\n\nHEIGHT OF COUNTER AT\nFORWARD APPROACH\n\n(B) ELEVATION\n\n29\nFIG 904.3 SALES & SERVICE COUNTERS\n30\n3/8" = 1\'-0"\n\nSheet Size:\nE1\n\nSheet Title:\n\nANSI 117.1\nACCESSIBLE\nDETAILS -\nGENERAL\n\nSheet No:\n\nG-501' | page_010.png
-[12:50:14] DEBUG      Page  11 | [ocr   ] 'Sheet Size:\nE1\n\nSheet Title:\n\nANSI 117.1\nACCESSIBLE\nDETAILS - SITE\n& BUILDING\n\nSheet No:\n\nG-502\n\nFIG 705.7.4 PEDESTRIAN REFUGE ISLANDS\n27\n3/16" = 1\'-0"' | page_011.png
-[12:50:19] DEBUG      Page  12 | [ocr   ] '14" -15"\n355-380mm\n\n-16"\n05MM\n\n\nS  22\nD"\n\n\n\n\n\n\n\n\n\nSheet Size:         E1\n\nSheet Title:\n\nANSI 117.1\nACCESSIBLE\nDETAILS -\nPLUMBING\n\n\nSheet No:\n\nG-503' | page_012.png
-[12:50:19] DEBUG      Page  13 | [native] 'SHEET\n1  OF  XX\n0\nL'                           | page_013.png
-[12:50:26] DEBUG      Page  14 | [ocr   ] "EDGE OF PAVEMENT\nEDGE OF GRAVEL\nUG E — UG ELECTRIC LINE\n========== UG STORM SEWER LINE\nSS — UG SAN. SEWER LINE\nW — UG WATER LINE\n— ··· — ··· — ··· — EDGE OF POND\nCONCRETE\n\nCONTOUR INTERVAL = 1'\n\n*\nHURT&PROFFITT\n\n30        15        0                30              60\n\nGRAPHIC SCALE IN FEET\n\nSHEET NO.        REV.\n\nV-101" | page_014.png
-[12:50:26] DEBUG      Page  15 | [native] 'SHEET NO.\nREV.\nSET\n*\n-001\n----\nA:  \n00 AC\nC' | page_015.png
-[12:50:26] DEBUG      Page  16 | [native] 'SHEET NO.\nREV.\nSET\n*\n-002\n___\nFOR THE DURATION OF THE PROJECT. CONTRACTOR\nOL PLAN TO BE SUBMITTED TO APPLICABLE GOVERNING\nC' | page_016.png
-[12:50:26] DEBUG      Page  17 | [native] 'SHEET NO.\nREV.\nSET\n*\n-003\n___\nC'            | page_017.png
-[12:50:26] DEBUG      Page  18 | [native] 'SHEET NO.\nREV.\nSET\n*\nC-101\n----\nSCALE 1" = 20\'\n0\n10\n20\n40' | page_018.png
-[12:50:26] DEBUG      Page  19 | [native] 'UG E\nUG E\n18" DI\nINV OUT:\n473.3\'\nINV IN: 474\nSHEET NO.\nREV.\nSET\n*\nC-102\n----\nSCALE 1" = 20\'\n0\n10\n20\n40' | page_019.png
-[12:50:26] DEBUG      Page  20 | [native] 'UG E\nUG E\n18" DI\nINV OUT:\n473.3\'\nINV IN: 474\nSHEET NO.\nREV.\nSET\n*\nC-103\n----\nSCALE 1" = 20\'\n0\n10\n20\n40' | page_020.png
-[12:50:27] DEBUG      Page  21 | [native] 'SHEET NO.\nREV.\nSET\n*\nC-104\n----\nSCALE 1" = 30\'\n0\n15\n30\n60' | page_021.png
-[12:50:27] DEBUG      Page  22 | [native] 'SHEET NO.\nREV.\nSET\n*\nC-105\n----\nSCALE 1" = 30\'\n0\n15\n30\n60' | page_022.png
-[12:50:27] DEBUG      Page  23 | [native] 'C-501\n----\nROPOSED GRADES OR EXISTING CONDITIONS AFTER COMPLETION OF THE\nCTION ROADS, LAY DOWN AREAS, ETC. SHALL BE RESTORED.\nHIN 30 DAYS OF PERMANENT SITE STABILIZATION.\nSHEET NO.\nREV.\nSET\n*' | page_023.png
-[12:50:27] DEBUG      Page  24 | [native] 'C-502\n----\nSHEET NO.\nREV.\nSET\n*'             | page_024.png
-[12:50:27] DEBUG      Page  25 | [native] 'C-503\n----\nSHEET NO.\nREV.\nSET\n*'             | page_025.png
-[12:50:27] DEBUG      Page  26 | [native] 'C-504\n----\nSHEET NO.\nREV.\nSET\n*'             | page_026.png
-[12:50:31] DEBUG      Page  27 | [ocr   ] 'Y xBLZ\n\nSheet Size:\nE1\n\nSheet Title:\n\nDEMOLITION\nPLAN\n\nSheet No:\n\nAD-101\n\nN PLAN\n1\n1/16" = 1\'-0"\nA-201 AD-101' | page_027.png
-[12:50:37] DEBUG      Page  28 | [ocr   ] 'X1 XBL2\n\n2-HR RATED 6" INSULATED\nMETAL PANEL (R-xx)\n\nS#\n\nCURTAIN WALL/ STOREFRONT\nSEE A-###\n\nSheet Size:\nE1\n\nSheet Title:\n\nMAIN FLOOR\nPLAN\n\nSheet No:\n\nFLOOR PLAN 1\n1/16" = 1\'-0" A-201 A-101\n\nA-101' | page_028.png
-[12:50:43] DEBUG      Page  29 | [ocr   ] 'XT  XBLZ2\n\n2-HR RATED 6" INSULATED\nMETAL PANEL (R-xx)\n\nS#\n\nCURTAIN WALL/ STOREFRONT\nSEE A-###\n\nSheet Size:\nE1\n\nSheet Title:\n\n2ND FLOOR\nPLAN\n\nSheet No:\n\nA-102\n\nEVEL OFFICES  1\n1/16" = 1\'-0"  A-201 A-102' | page_029.png
-[12:50:47] DEBUG      Page  30 | [ocr   ] 'Sheet Size:\nE1\n\nSheet Title:\n\nOVERALL SLAB\nAND BOLLARD\nPLAN\n\nSheet No:\n\nA-111\n\nOLLARD PLAN\n1\n1/16" = 1\'-0"\nA-201 A-111' | page_030.png
-[12:50:52] DEBUG      Page  31 | [ocr   ] 'Sheet Size:\nE1\n\nSheet Title:\n\nOVERAL\nEQUIPMENT &\nRACKING\nPLAN\n\nSheet No:\n\nA-112\n\nRACKING PLAN 1\n1/16" = 1\'-0"\nA-201 A-112' | page_031.png
-[12:50:58] DEBUG      Page  32 | [ocr   ] 'Sheet Size:\nE1\n\nSheet Title:\n\nMAIN FLOOR\nFINISH PLAN\n\nSheet No:\n\nA-121\n\nR FINISH PLAN\n1\n1/16" = 1\'-0"\nA-201 A-121' | page_032.png
-[12:51:03] DEBUG      Page  33 | [ocr   ] 'Sheet Size:\nE1\n\nSheet Title:\n\nMAIN FLOOR\nREFLECTED\nCEILING PLAN\n\nSheet No:\n\nA-131\n\nCEILING PLAN 1\n1/16" = 1\'-0"\nA-201 A-131' | page_033.png
-[12:51:07] DEBUG      Page  34 | [ocr   ] 'Sheet Size:\nE1\n\nSheet Title:\n\n2ND FLOOR\nREFLECTED\nCEILING PLAN\n\nSheet No:\n\nA-132\n\nCEILING PLAN 1\n1/16" = 1\'-0"\nA-201 A-132' | page_034.png
-[12:51:11] DEBUG      Page  35 | [ocr   ] 'Sheet Size:\nE1\n\nSheet Title:\n\nOVERALL\nROOF PLAN\n\nSheet No:\n\nA-141\n\n_L ROOF PLAN\n1\n1/16" = 1\'-0"\nA-201 A-141' | page_035.png
-[12:51:17] DEBUG      Page  36 | [ocr   ] 'LOW BAY CLR HEIGHT\n494\' - 11 243/256"\n\nMAIN LEVEL\n479\' - 11 243/256"\nTRUCK APRON\n475\' - 11 243/256"\n\nSOUTH ELEVATION 5\n3/32" = 1\'-0"  A-101 A-201\n\nSheet Size:\nE1\n\nSheet Title:\n\nEXTERIOR\nELEVATIONS\n\nSheet No:\n\nA-201' | page_036.png
-[12:51:20] DEBUG      Page  37 | [ocr   ] 'Sheet Size:                    E1\n\nSheet Title:\n\nINTERIOR\nELEVATIONS\n\n\nSheet No:\n\nA-251' | page_037.png
-[12:51:24] DEBUG      Page  38 | [ocr   ] 'Sheet Size:                    E1\n\nSheet Title:\n\nE/W BUILDING\nSECTIONS\n\n\n\n\nSheet No:\n\nA-301' | page_038.png
-[12:51:31] DEBUG      Page  39 | [ocr   ] 'Sheet Size:\nE1\n\nSheet Title:\n\nN/S BUILDING\nSECTIONS\n\nSheet No:\n\nA-311' | page_039.png
-[12:51:34] DEBUG      Page  40 | [ocr   ] 'Sheet Size:\nE1\n\nSheet Title:\n\nE/W WALL\nSECTIONS\n\nSheet No:\n\nA-351' | page_040.png
-[12:51:37] DEBUG      Page  41 | [ocr   ] 'Sheet Size:\nE1\n\nSheet Title:\n\nE/W WALL\nSECTIONS\n\nSheet No:\n\nA-352' | page_041.png
-[12:51:41] DEBUG      Page  42 | [ocr   ] 'Sheet Size:\nE1\n\nSheet Title:\n\nE/W WALL\nSECTIONS\n\nSheet No:\n\nA-353' | page_042.png
-[12:51:44] DEBUG      Page  43 | [ocr   ] 'Sheet Size:                E1\n\nSheet Title:\n\nN/S WALL\nSECTIONS\n\n\n\nSheet No:\n\nA-361' | page_043.png
-[12:51:48] DEBUG      Page  44 | [ocr   ] 'Sheet Size:                    E1\n\nSheet Title:\n\nN/S WALL\nSECTIONS\n\n\n\n\nSheet No:\n\nA-362' | page_044.png
-[12:51:54] DEBUG      Page  45 | [ocr   ] '/4"\n\n)\n\n2-HR RATED 6" INSULATED\nMETAL PANEL (R-xx)\n\nS#\n\nCURTAIN WALL/ STOREFRONT\nSEE A-###\n\nFLOOR PLAN 2\n3/16" = 1\'-0"\nA-101 A-401\n\nSheet Size:\nE1\n\nSheet Title:\n\nMAIN FLOOR\nENLARGED\nFLOOR PLANS\n\nSheet No:\n\nA-401' | page_045.png
-[12:52:00] DEBUG      Page  46 | [ocr   ] '4.7\n\n2-HR RATED 6" INSULATED\nMETAL PANEL (R-xx)\n\nS#\n\nCURTAIN WALL/ STOREFRONT\nSEE A-###\n\nSheet Size:\nE1\n\nSheet Title:\n\n2ND FLOOR\nENLARGED\nFLOOR PLANS\n\nSheet No:\n\nA-405\n\nB\n\nOFFICES PLAN\n1\n3/16" = 1\'-0"\nA-102 A-405' | page_046.png
-[12:52:07] DEBUG      Page  47 | [ocr   ] 'Sheet Size:\nE1\n\nSheet Title:\n\nENLARGED\nRESTROOM\nPLANS AND\nELEVATIONS\n\n2-HR RATED 6" INSULATED\nMETAL PANEL (R-xx)\n\nS#\n\nCURTAIN WALL/ STOREFRONT\nSEE A-###\n\nSheet No:\n\nA-411\n\n\'S RESTROOM\n3\n1/4" = 1\'-0"\nA-405 A-411' | page_047.png
-[12:52:13] DEBUG      Page  48 | [ocr   ] 'Sheet Size:\nE1\n\nSheet Title:\n\nENLARGED\nPLANS AND\nELEVATIONS\n\nSheet No:\n\nA-415\n\n6" EPOXY BASE\n\nNOTE: SEE SHEET G-503 FOR MOUNTING\nHEIGHTS, CLEARANCES, AND SPACING.\n\nFOUNTAIN ALCOVE\n\n1/2" = 1\'-0"\n\nB\n\nA-401 A-415\n\n2-HR RATED 6" INSULATED\nMETAL PANEL (R-xx)\n\nS#\n\nCURTAIN WALL/ STOREFRONT\nSEE A-###' | page_048.png
-[12:52:18] DEBUG      Page  49 | [ocr   ] 'Sheet Size:\nE1\n\nSheet Title:\n\nMAIN FLOOR\nENLARGED\nFINISH PLANS\n\nSheet No:\n\nA-421\n\nR FINISH PLAN\n2\n3/16" = 1\'-0"\nA-121 A-421' | page_049.png
-[12:52:22] DEBUG      Page  50 | [ocr   ] 'Sheet Size:\nE1\n\nSheet Title:\n\n2ND FLOOR\nENLARGED\nFINISH PLANS\n\nSheet No:\n\nA-422\n\n4.7\n\nB\n\nS FINISH PLAN\n1\n3/16" = 1\'-0"\nA-422' | page_050.png
-[12:52:26] DEBUG      Page  51 | [ocr   ] 'Sheet Size:\nE1\n\nSheet Title:\n\nMAIN FLOOR\nENLARGED\nREFLECTED\nCEILING\nPLANS\n\nSheet No:\n\nA-431\n\nCEILING PLAN 2\n3/16" = 1\'-0"\nA-131 A-431' | page_051.png
-[12:52:39] DEBUG      Page  52 | [ocr   ] 'Sheet Size:\nE1\n\nSheet Title:\n\n2ND FLOOR\nENLARGED\nREFLECTED\nCEILING\nPLANS\n\nSheet No:\n\nA-432\n\nCEILING PLAN    1\n3/16" = 1\'-0"    A-132 A-432' | page_052.png
-[12:52:43] DEBUG      Page  53 | [ocr   ] 'Sheet Size:                    E1\n\nSheet Title:\n\nVERTICAL\nCIRCULATION\n\n\n\nSheet No:\n\n\nSTAIR TOWER 3D    1              A-451\n                        A-451' | page_053.png
-[12:52:50] DEBUG      Page  54 | [ocr   ] 'Sheet Size:\nE1\n\nSheet Title:\n\nVERTICAL\nCIRCULATION\n\nSheet No:\n\nA-452\n\nMAIN LEVEL\n479\' - 11 243/256"\n\nSTAIR 2 - SECTION 1\n1/4" = 1\'-0"\n\n3\nA-141 A-452' | page_054.png
-[12:52:56] DEBUG      Page  55 | [ocr   ] 'Sheet Size:                E1\n\nSheet Title:\n\nENLARGED\nRAMP PLANS\nAND\nSECTIONS\n\n\nSheet No:\n\nA-456' | page_055.png
-[12:53:00] DEBUG      Page  56 | [ocr   ] 'Sheet Size:\nE1\n\nSheet Title:\n\nWALL BASE\nDETAILS\n\n\n\n\n\nSheet No:\n\nCONC - WALL BASE AT LOADING DOCK 14\n1" = 1\'-0"\nA-352 A-501\n\nA-501' | page_056.png
-[12:53:05] DEBUG      Page  57 | [ocr   ] '.H FINISH)\n\nFOLDS\nIS\n\n1" MIN. THERMAL\nCUT FACE OF IMP\n\nIMP CORNER 19\n3" = 1\'-0"\nA-505\n\nSheet Size: E1\n\nSheet Title:\n\nWALL DETAILS\n\nSheet No:\n\nA-505' | page_057.png
-[12:53:14] DEBUG      Page  58 | [ocr   ] '26 GA PREFINISHED METAL TRIM\nATTACHED W / #8x3/4" WAFER HEAD\nTEK SCREW @ 6" OC (HEM EDGES &\nMATCH IMP FINISH)\n\nIF APPLICABLE: CONDUIT FOR HEAT-\nTRACE; COORDINATE W/ BASE PLATE(S)\n\nINSULATED METAL PANEL PER\nSCHEDULE\n\nLINE OF FOUNDATION\n\nJAMB\n\nOVERHEAD DOOR @ IMP 20\n1 1/2" = 1\'-0"   A-511\n\nSheet Size:        E1\n\nSheet Title:\n\nDOOR &\nWINDOW\nDETAILS\n\nSheet No:\n\nA-511' | page_058.png
-[12:53:19] DEBUG      Page  59 | [ocr   ] 'SCHLUTER DILEX-AHK REVEAL,\nANODIZED ALUMINUM\n\nFLOOR TILE PER SCHEDULE\n\nSheet Size:\nE1\n\nSheet Title:\n\nINTERIOR\nDETAILS\n\nSheet No:\n\nTILE BASE\n2\nA-521\n6" = 1\'-0"\nA-521' | page_059.png
-[12:53:22] DEBUG      Page  60 | [ocr   ] 'Sheet Size:\nE1\nSheet Title:\nCEILING\nDETAILS\nSheet No:\nA-531' | page_060.png
-[12:53:27] DEBUG      Page  61 | [ocr   ] 'Sheet Size:\nE1\n\nSheet Title:\n\nCEILING\nDETAILS\n\nSheet No:\n\n6"\nMIN\n\nMETAL STUD\n\n5/8" GYPSUM\nWALL BOARD\n\nVB CEILING TO METAL STUD WALL SOFFIT\n20\n1 1/2" = 1\'-0"\nA-415 A-532\n\nA-532' | page_061.png
-[12:53:32] DEBUG      Page  62 | [ocr   ] 'FASTENER\n\nINSULATED METAL WALL PANEL\nPER PLAN\n\nSheet Size:\nE1\n\nSheet Title:\n\nROOF DETAILS\n\nSheet No:\n\nIMP KING SPAN RAKE\n16\nA-541\n3" = 1\'-0"\nA-361 A-541' | page_062.png
-[12:53:40] DEBUG      Page  63 | [ocr   ] 'Sheet Size:\nE1\n\nSheet Title:\n\nSTAIR DETAILS\n\nSheet No:\n\n12" GALV. STEEL CHANNEL\nSTAIRS STRINGERS\n\nCLOSED RISER\n\n1 1/2" STEEL PAN / CONCRETE\nTREAD STAIR TREADS\n\nEXPANSION ANCHOR AND\nSTEEL ANGLE CLIP\n\n1" GROUT SPACE FOR LEVELING\n\n11"\n\nSTAIR - STEEL PAN STAIR BASE DETAIL 16\n1" = 1\'-0"\nA-451 A-551\n\nA-551' | page_063.png
-[12:53:47] DEBUG      Page  64 | [ocr   ] '1 x (4)\n\n16" DIA X 1/2" GALV\nSTEEL BASE\nPLATE\n\nSTRUCTURAL SLAB\n\n1/2" x 7" GALV. NELSON\nSTUDS W/ WASHER, 8 EA\nEMBED TUBE IN SLAB\n\nTYP. INTERIOR BOLLARD   1\n3/4" = 1\'-0"   A-561\n\nSheet Size:\nE1\n\nSheet Title:\n\nMISCELLANEOUS\nDETAILS\n\nSheet No:\n\nA-561' | page_064.png
-[12:53:51] DEBUG      Page  65 | [ocr   ] 'Sheet Size:\nE1\n\nSheet Title:\n\nDOOR TYPES,\nSCHEDULE &\nHARDWARE\n\nSheet No:\n\nA-601' | page_065.png
-[12:53:55] DEBUG      Page  66 | [ocr   ] 'Sheet Size:\nE1\n\nSheet Title:\n\nWINDOW &\nSTOREFRONT\nELEVATIONS &\nSCHEDULE\n\nSheet No:\n\nA-611\n\nTYPE 25\n\nLEGEND\n1/4" = 1\'-0"' | page_066.png
-[12:54:00] DEBUG      Page  67 | [ocr   ] 'Sheet Size:\nE1\n\nSheet Title:\n\nFINISH\nSCHEDULES\n\nSheet No:\n\nA-621' | page_067.png
-[12:54:00] DEBUG      Page  68 | [native] 'TOF\nTOP OF FOUNDATION/FOOTING\nTOP\nTOP\nTOC\nTOP OF CONCRETE\nTOF\nTOP OF FOUNDATION\nTOS\nTOP OF STEEL\nTOW\nTOP OF WALL\nTRANS\nTRANSVERSE\nTYP\nTYPICAL\nULT\nULTIMATE DESIGN\nUNO\nUNLESS NOTED OTHERWISE\nUS\nUNDERSIDE\nUT\nULTRASONIC TESTING\nVEF\nVERTICAL EACH FACE\nVERT\nVERTICAL\nVIF\nVERTICAL INSIDE FACE OR VERIFY IN FIELD\nVOF\nVERTICAL OUTSIDE FACE\nW\nW-SHAPE\nW/\nWITH\nW/O\nWITHOUT\nWD\nWOOD\nWF\nWIDE-FLANGE\nWHS\nWELDED HEADED STUD\nWP\nWORKING POINT\nWS\nWELDED SHEAR STUD\nWT\nWEIGHT\nWWF\nWELDED WIRE FABRIC\nSheet No:\nSheet Title:\nSheet Size:\nE1\nS-000\nSTRUCTURAL\nGENERAL\nNOTES' | page_068.png
-[12:54:00] DEBUG      Page  69 | [native] 'Sheet No:\nSheet Title:\nSheet Size:\nE1\nS-001\nSTRUCTURAL\nSPECIAL\nINSPECTION\nSCHEDULE' | page_069.png
-[12:54:00] DEBUG      Page  70 | [native] 'Sheet No:\nSheet Title:\nSheet Size:\nE1\nS-100\nOVERALL\nROOF\nLOADING\nPLAN' | page_070.png
-[12:54:00] DEBUG      Page  71 | [native] 'Sheet No:\nSheet Title:\nSheet Size:\nE1\nS-110\nOVERALL\nFOUNDATION\nPLAN\n1/16" = 1\'-0"\nA-201 S-110\n1\nOVERALL FOUNDATION PLAN' | page_071.png
-[12:54:00] DEBUG      Page  72 | [native] 'Sheet No:\nSheet Title:\nSheet Size:\nE1\nS-111\nENLARGED\nFOUNDATION\nPLAN -\nWAREHOUSE\n3/32" = 1\'-0"\nA-201 S-111\n1\nD FOUNDATION PLAN - WAREHOUSE' | page_072.png
-[12:54:00] DEBUG      Page  73 | [native] 'Sheet No:\nSheet Title:\nSheet Size:\nE1\nS-112\nENLARGED\nFOUNDATION\nPLAN - MAIN\nFLOOR' | page_073.png
-[12:54:00] DEBUG      Page  74 | [native] 'Sheet No:\nSheet Title:\nSheet Size:\nE1\nS-113\nENLARGED\nFOUNDATION\nPLAN - (E)\nBUILDING\n1" = 10\'-0"\nA-201 S-113\n1\nED FOUNDATION PLAN - (E) BUILDING' | page_074.png
-[12:54:00] DEBUG      Page  75 | [native] 'Sheet No:\nSheet Title:\nSheet Size:\nE1\nS-120\nOVERALL\nFLOOR\nFRAMING\nPLAN\n1/16" = 1\'-0"\nA-201 S-120\n1\nALL FLOOR FRAMING PLAN - SECOND' | page_075.png
-[12:54:01] DEBUG      Page  76 | [native] 'Sheet No:\nSheet Title:\nSheet Size:\nE1\nS-121\nENLARGED\nFRAMING\nPLAN - OFFICE\n3/16" = 1\'-0"\nA-201 S-121\n2\nFRAMING PLAN - 2ND FLOOR OFFICE' | page_076.png
-[12:54:01] DEBUG      Page  77 | [native] 'Sheet No:\nSheet Title:\nSheet Size:\nE1\nS-130\nOVERALL\nROOF\nFRAMING\nPLAN\n1/16" = 1\'-0"\nA-201 S-130\n1\nOVERALL ROOF FRAMING PLAN' | page_077.png
-[12:54:01] DEBUG      Page  78 | [native] 'xBL6\nSheet No:\nSheet Title:\nSheet Size:\nE1\nS-131\nENLARGED\nROOF\nFRAMING\nPLAN -\nWAREHOUSE\n3/32" = 1\'-0"\nA-201 S-131\n1\nROOF FRAMING PLAN - WAREHOUSE' | page_078.png
-[12:54:01] DEBUG      Page  79 | [native] 'Sheet No:\nSheet Title:\nSheet Size:\nE1\nS-132\nENLARGED\nROOF\nFRAMING\nPLAN - (E)\nBUILDING\n1" = 10\'-0"\nA-201 S-132\n1\nROOF FRAMING PLAN - (E) BUILDING' | page_079.png
-[12:54:01] DEBUG      Page  80 | [native] 'Sheet No:\nSheet Title:\nSheet Size:\nE1\nS-200\nSTRUCTURAL\nFRAMING\nELEVATIONS\n1/8" = 1\'-0"\nS-110 S-200\n3\nRAMING ELEVATION - WAREHOUSE SOUTH' | page_080.png
-[12:54:01] DEBUG      Page  81 | [native] 'Sheet No:\nSheet Title:\nSheet Size:\nE1\nS-201\nSTRUCTURAL\nFRAMING\nELEVATIONS' | page_081.png
-[12:54:01] DEBUG      Page  82 | [native] 'Sheet No:\nSheet Title:\nSheet Size:\nE1\nS-202\nSTRUCTURAL\nFRAMING\nELEVATIONS' | page_082.png
-[12:54:01] DEBUG      Page  83 | [native] 'Sheet No:\nSheet Title:\nSheet Size:\nE1\nS-203\nSTRUCTURAL\nFRAMING\nELEVATIONS\n1/8" = 1\'-0"\nS-110 S-203\n4\nAMING ELEVATION - (E) BUILDING GRID X6' | page_083.png
-[12:54:01] DEBUG      Page  84 | [native] 'Sheet No:\nSheet Title:\nSheet Size:\nE1\nS-204\nSTRUCTURAL\nFRAMING\nELEVATIONS' | page_084.png
-[12:54:01] DEBUG      Page  85 | [native] 'Sheet No:\nSheet Title:\nSheet Size:\nE1\nS-400\nTYPICAL\nDETAILS -\nCONCRETE' | page_085.png
-[12:54:01] DEBUG      Page  86 | [native] 'Sheet No:\nSheet Title:\nSheet Size:\nE1\nS-410\nFOUNDATION\nFRAMING\nDETAILS' | page_086.png
-[12:54:01] DEBUG      Page  87 | [native] 'Sheet No:\nSheet Title:\nSheet Size:\nE1\nS-420\nFOUNDATION\nCONNECTION\nDETAILS' | page_087.png
-[12:54:01] DEBUG      Page  88 | [native] 'Sheet No:\nSheet Title:\nSheet Size:\nE1\nS-430\nBRACED\nFRAME\nFOUNDATION\nDETAILS' | page_088.png
-[12:54:01] DEBUG      Page  89 | [native] 'Sheet No:\nSheet Title:\nSheet Size:\nE1\nS-500\nTYPICAL\nDETAILS -\nSTEEL' | page_089.png
-[12:54:01] DEBUG      Page  90 | [native] 'Sheet No:\nSheet Title:\nSheet Size:\nE1\nS-510\nSTEEL\nFRAMING\nDETAILS' | page_090.png
-[12:54:01] DEBUG      Page  91 | [native] '3/4" CAP PLATE\n(2) 3/4" DIA. \nA325 BOLTS\nJO\nCO\n1/2" M\nCAP PL\nSheet No:\nSheet Title:\nSheet Size:\nE1\nS-520\nSTEEL\nCONNECTION\nDETAILS\n3/4" = 1\'-0"\nS-520\n8\nJOIST AT WF COLUMN WEAK' | page_091.png
-[12:54:01] DEBUG      Page  92 | [native] 'Sheet No:\nSheet Title:\nSheet Size:\nE1\nS-521\nSTEEL\nCONNECTION\nDETAILS' | page_092.png
-[12:54:01] DEBUG      Page  93 | [native] 'Sheet No:\nSheet Title:\nSheet Size:\nE1\nS-530\nBRACED\nFRAME STEEL\nDETAILS' | page_093.png
-[12:54:01] DEBUG      Page  94 | [native] 'Sheet No:\nSheet Title:\nSheet Size:\nE1\nS-540\nMOMENT\nFRAME STEEL\nDETAILS' | page_094.png
-[12:54:01] DEBUG      Page  95 | [native] 'Sheet No:\nSheet Title:\nSheet Size:\nE1\nS-600\nTYPICAL\nDETAILS -\nLIGHT GAUGE' | page_095.png
-[12:54:01] DEBUG      Page  96 | [native] 'Sheet No:\nSheet Title:\nSheet Size:\nE1\nS-610\nLIGHT GAUGE\nFRAMING\nDETAILS' | page_096.png
-[12:54:01] DEBUG      Page  97 | [native] 'MAIN LEVEL\n479\' - 11 243/256"\n1/2\nL3X3X1/2\nTYP @ \nHSS4X4 \nLANDING COL\nS-420\n5\nSheet No:\nSheet Title:\nSheet Size:\nE1\nS-700\nSTAIR\nFRAMING\nPLAN &\nELEVATIONS\n1/4" = 1\'-0"\nS-700 S-700\n7\nR FRAMING ELEVATION - STAIR 1 GRID 4.6' | page_097.png
-[12:54:01] DEBUG      Page  98 | [native] 'Sheet No:\nSheet Title:\nSheet Size:\nE1\nS-701\nSTAIR\nFRAMING\nPLAN &\nELEVATIONS' | page_098.png
-[12:54:01] DEBUG      Page  99 | [native] 'Sheet No:\nSheet Title:\nSheet Size:\nE1\nS-710\nSTAIR\nFRAMING\nDETAILS' | page_099.png
-[12:54:01] INFO     All region images saved to D:\Projects\PyCharmProjects\PIPMODULES\Classification\PDFClassificationEngine\debug\region_img
-[12:54:01] INFO     ======================================================================
-[12:54:01] INFO     DONE
+[13:23:06] INFO     ======================================================================
+[13:23:06] INFO     REGION DETECTION PIPELINE TEST
+[13:23:06] INFO     PDF:       C:\Users\tylere.METALSFAB\Desktop\Dev stuff\PDFClassifyMCP\Testing\REV-M_2026-01-19_COMBINED.pdf
+[13:23:06] INFO     Timestamp: 2026-02-11T13:23:06.675303
+[13:23:06] INFO     ======================================================================
+[13:23:06] INFO     Page count: 99
+[13:23:06] INFO     ----------------------------------------------------------------------
+[13:23:06] INFO     Starting region detection...
+[13:23:06] INFO     Sample pages selected: [26, 51, 75]
+[13:23:07] INFO       Sending page 26 to Opus for reading...
+[13:23:09] INFO       Opus response: {'sheet_number': 'C-504', 'area': 'bottom-right'}
+[13:23:09] INFO     AI detected: sheet_number='C-504', area='bottom-right'
+[13:23:10] INFO       No native text blocks matched 'C-504'
+[13:23:10] INFO     Path B (OCR) — scanning candidates for area: 'bottom-right'
+[13:23:12] DEBUG        OCR [br-wide]: '*\nHURT&PROFFIT\nSHEET NO.\nREV.\nC-504\n----'
+[13:23:32] DEBUG      OCR validation: 5/5 pages matched
+[13:23:32] INFO       Hit on br-wide — validation: 100%
+[13:23:32] INFO     Detection complete in 25.68s
+[13:23:32] INFO     ----------------------------------------------------------------------
+[13:23:32] INFO     Method:           ocr_candidate
+[13:23:32] INFO     Confidence:       95.00%
+[13:23:32] INFO     Validation score: 100.00%
+[13:23:32] INFO     Cost:             $0.0286
+[13:23:32] INFO     Region:           {'x_ratio': 0.7949999999999999, 'y_ratio': 0.875, 'w_ratio': 0.22000000000000003, 'h_ratio': 0.14}
+[13:23:32] INFO     Samples:          ['C-101', 'A-132', 'A-431', 'A-621', 'E1']
+[13:23:32] INFO     ----------------------------------------------------------------------
+[13:23:32] INFO     Saving region images for 99 pages...
+[13:23:34] DEBUG      Page   1 | [ocr   ] 'Sheet Size:\nE1\n\nSheet Title:\n\nCOVER SHEET\n\nSheet No:\n\nG-001' | page_001.png
+[13:23:35] DEBUG      Page   2 | [native] 'Sheet No:\nSheet Title:\nSheet Size:\nE1\nG-002\nSHEET INDEX' | page_002.png
+[13:23:37] DEBUG      Page   3 | [ocr   ] 'Sheet Size:\nE1\n\nSheet Title:\n\nCODE REVIEW\n\nSheet No:\n\nG-011' | page_003.png
+[13:23:40] DEBUG      Page   4 | [ocr   ] 'Sheet Size:                E1\n\nSheet Title:\n\nCODE REVIEW\n\n\n\n\nSheet No:\n\nG-012' | page_004.png
+[13:23:44] DEBUG      Page   5 | [ocr   ] 'Sheet Size:\nE1\n\nSheet Title:\n\nARCHITECTURAL\nSITE PLAN\n\n\n\n\nSheet No:\n\n\nARCHITECTURAL SITE PLAN    1\n                          1" = 60\'-0"    A-201 G-021        G-021' | page_005.png
+[13:23:51] DEBUG      Page   6 | [ocr   ] 'FIRE DEPARTMENT INGRESS\n\nEMERGENCY DOOR EXIT SIGN\n\nFIRE EXTINGUISHER\nFE\n\n1 HR FIRE RATED WALLS\n\n2 HR FIRE RATED WALLS\n\nEGRESS PATH\n\nINCIDENTAL OCCUPANCY\n\nSAFETY PLAN 1\n1/16" = 1\'-0" A-201 G-101\n\nSheet Size:\nE1\n\nSheet Title:\nOVERALL LIFE\nSAFETY PLAN -\nMAIN LEVEL\n\nSheet No:\nG-101' | page_006.png
+[13:23:57] DEBUG      Page   7 | [ocr   ] '4.6\n\n4.7\n\nFIRE DEPARTMENT INGRESS\n\nEMERGENCY DOOR EXIT SIGN\n\nFE\nFIRE EXTINGUISHER\n\n1 HR FIRE RATED WALLS\n\n2 HR FIRE RATED WALLS\n\nEGRESS PATH\n\nSAFETY PLAN 1\n3/16" = 1\'-0" A-201 G-102\n\nINCIDENTAL OCCUPANCY\n\nSheet Size:\nE1\n\nSheet Title:\n\nENLARGED\nLIFE SAFETY\nPLANS\n\nSheet No:\n\nG-102' | page_007.png
+[13:24:02] DEBUG      Page   8 | [ocr   ] 'Sheet Size:                    E1\n\nSheet Title:\n\nENERGY CODE\n\n\n\n\n1 High Impact (Tier 1)    2 Medium Impact (Tier 2)    3 Low Impact (Tier 3)\n\nPCA Riverville Storage/Warehouse                                Report date: 01/05/26\ne:                                                              Page    12 of  12        Sheet No:\n\n\n                                                                                         G-103' | page_008.png
+[13:24:04] DEBUG      Page   9 | [ocr   ] 'Sheet Size:\nE1\n\nSheet Title:\n\nUL\nASSEMBLIES\n\nSheet No:\n\nG-110' | page_009.png
+[13:24:12] DEBUG      Page  10 | [ocr   ] 'SIDE\n\nSIDE\n\n(A) CROSS SECTION\n\n430-485mm\n\nHEIGHT OF\nVERTICAL BARRIER R AT\n\nHEIGHT OF COUNTER AT\nPARALLEL APPROACH\n\nHEIGHT OF COUNTER AT\nFORWARD APPROACH\n\n(B) ELEVATION\n\n29\n\nFIG 904.3 SALES & SERVICE COUNTERS\n\n30\n\n3/8" = 1\'-0"\n\nSheet Size:\n\nE1\n\nSheet Title:\n\nANSI 117.1\nACCESSIBLE\nDETAILS -\nGENERAL\n\nSheet No:\n\nG-501\n\n3"\n\n91\n\n3\n\n660-1\n\n26"\n\n1\n\n3"\n\n0"\nOS' | page_010.png
+[13:24:16] DEBUG      Page  11 | [ocr   ] 'Sheet Size:\nE1\n\nSheet Title:\n\nANSI 117.1\nACCESSIBLE\nDETAILS - SITE\n& BUILDING\n\nSheet No:\n\nG-502\n\nFIG 705.7.4 PEDESTRIAN REFUGE ISLANDS\n27\n3/16" = 1\'-0"' | page_011.png
+[13:24:21] DEBUG      Page  12 | [ocr   ] '14" - 15"\n355-380mm\n\n16"\n05MM\n\n22\nS\n0"\n\nSheet Size:\nE1\n\nSheet Title:\n\nANSI 117.1\nACCESSIBLE\nDETAILS -\nPLUMBING\n\nSheet No:\n\nG-503' | page_012.png
+[13:24:21] DEBUG      Page  13 | [native] 'SHEET\n1  OF  XX\n0\nL'                           | page_013.png
+[13:24:26] DEBUG      Page  14 | [ocr   ] "EDGE OF PAVEMENT\nEDGE OF GRAVEL\nUG E UG ELECTRIC LINE\nUG STORM SEWER LINE\nSS UG SAN. SEWER LINE\nW UG WATER LINE\nEDGE OF POND\nCONCRETE\n\nCONTOUR INTERVAL = 1'\n\n30      15      0           30          60\nGRAPHIC SCALE IN FEET\n\n*\nHURT&PROFFITT\nSHEET NO.    REV.\nV-101" | page_014.png
+[13:24:26] DEBUG      Page  15 | [native] 'SHEET NO.\nREV.\nSET\n*\n-001\n----\nA:  \n00 AC\nC' | page_015.png
+[13:24:26] DEBUG      Page  16 | [native] 'SHEET NO.\nREV.\nSET\n*\n-002\n___\nFOR THE DURATION OF THE PROJECT. CONTRACTOR\nOL PLAN TO BE SUBMITTED TO APPLICABLE GOVERNING\nC' | page_016.png
+[13:24:26] DEBUG      Page  17 | [native] 'SHEET NO.\nREV.\nSET\n*\n-003\n___\nC'            | page_017.png
+[13:24:27] DEBUG      Page  18 | [native] 'SHEET NO.\nREV.\nSET\n*\nC-101\n----\nSCALE 1" = 20\'\n0\n10\n20\n40' | page_018.png
+[13:24:27] DEBUG      Page  19 | [native] 'UG E\nUG E\n18" DI\nINV OUT:\n473.3\'\nINV IN: 474\nSHEET NO.\nREV.\nSET\n*\nC-102\n----\nSCALE 1" = 20\'\n0\n10\n20\n40' | page_019.png
+[13:24:27] DEBUG      Page  20 | [native] 'UG E\nUG E\n18" DI\nINV OUT:\n473.3\'\nINV IN: 474\nSHEET NO.\nREV.\nSET\n*\nC-103\n----\nSCALE 1" = 20\'\n0\n10\n20\n40' | page_020.png
+[13:24:27] DEBUG      Page  21 | [native] 'SHEET NO.\nREV.\nSET\n*\nC-104\n----\nSCALE 1" = 30\'\n0\n15\n30\n60' | page_021.png
+[13:24:27] DEBUG      Page  22 | [native] 'SHEET NO.\nREV.\nSET\n*\nC-105\n----\nSCALE 1" = 30\'\n0\n15\n30\n60' | page_022.png
+[13:24:27] DEBUG      Page  23 | [native] 'C-501\n----\nROPOSED GRADES OR EXISTING CONDITIONS AFTER COMPLETION OF THE\nCTION ROADS, LAY DOWN AREAS, ETC. SHALL BE RESTORED.\nHIN 30 DAYS OF PERMANENT SITE STABILIZATION.\nSHEET NO.\nREV.\nSET\n*' | page_023.png
+[13:24:27] DEBUG      Page  24 | [native] 'C-502\n----\nSHEET NO.\nREV.\nSET\n*'             | page_024.png
+[13:24:27] DEBUG      Page  25 | [native] 'C-503\n----\nSHEET NO.\nREV.\nSET\n*'             | page_025.png
+[13:24:27] DEBUG      Page  26 | [native] 'C-504\n----\nSHEET NO.\nREV.\nSET\n*'             | page_026.png
+[13:24:33] DEBUG      Page  27 | [ocr   ] 'Sheet Size:\nE1\n\nSheet Title:\n\nDEMOLITION\nPLAN\n\nSheet No:\n\nAD-101\n\nY xBLZ\n\nN PLAN 1\n1/16" = 1\'-0"\nA-201 AD-101' | page_027.png
+[13:24:38] DEBUG      Page  28 | [ocr   ] 'X1 XDL2\n\n2-HR RATED 6" INSULATED\nMETAL PANEL (R-xx)\n\nS#\n\nCURTAIN WALL/ STOREFRONT\nSEE A-###\n\nFLOOR PLAN    1\n1/16" = 1\'-0"    A-201 A-101\n\nSheet Size:    E1\n\nSheet Title:\n\nMAIN FLOOR\nPLAN\n\nSheet No:\n\nA-101' | page_028.png
+[13:24:44] DEBUG      Page  29 | [ocr   ] 'XT XBLZ2\n\n2-HR RATED 6" INSULATED\nMETAL PANEL (R-xx)\n\nS#\n\nCURTAIN WALL/ STOREFRONT\nSEE A-###\n\nSheet Size:\nE1\n\nSheet Title:\n\n2ND FLOOR\nPLAN\n\nSheet No:\n\nA-102\n\nEVEL OFFICES 1\n1/16" = 1\'-0" A-201 A-102' | page_029.png
+[13:24:49] DEBUG      Page  30 | [ocr   ] 'Sheet Size:\nE1\n\nSheet Title:\n\nOVERALL SLAB\nAND BOLLARD\nPLAN\n\nSheet No:\n\nA-111\n\nOLLARD PLAN\n1\n1/16" = 1\'-0"\nA-201 A-111' | page_030.png
+[13:24:54] DEBUG      Page  31 | [ocr   ] 'Sheet Size:\nE1\n\nSheet Title:\n\nOVERAL\nEQUIPMENT &\nRACKING\nPLAN\n\nSheet No:\n\nA-112\n\nRACKING PLAN\n1\n1/16" = 1\'-0"\nA-201 A-112' | page_031.png
+[13:24:58] DEBUG      Page  32 | [ocr   ] 'Sheet Size:\nE1\n\nSheet Title:\n\nMAIN FLOOR\nFINISH PLAN\n\nSheet No:\n\nA-121\n\nR FINISH PLAN\n1\n1/16" = 1\'-0"\nA-201 A-121' | page_032.png
+[13:25:01] DEBUG      Page  33 | [ocr   ] 'Sheet Size:\nE1\n\nSheet Title:\n\nMAIN FLOOR\nREFLECTED\nCEILING PLAN\n\nSheet No:\n\nA-131\n\nCEILING PLAN 1\n1/16" = 1\'-0"\nA-201 A-131' | page_033.png
+[13:25:05] DEBUG      Page  34 | [ocr   ] 'Sheet Size:\nE1\n\nSheet Title:\n\n2ND FLOOR\nREFLECTED\nCEILING PLAN\n\nSheet No:\n\nA-132\n\nCEILING PLAN\n1\n1/16" = 1\'-0"\nA-201 A-132' | page_034.png
+[13:25:10] DEBUG      Page  35 | [ocr   ] 'Sheet Size:\nE1\n\nSheet Title:\n\nOVERALL\nROOF PLAN\n\nSheet No:\n\nA-141\n\n_L ROOF PLAN\n1\n1/16" = 1\'-0"\nA-201 A-141' | page_035.png
+[13:25:15] DEBUG      Page  36 | [ocr   ] 'LOW BAY CLR HEIGHT\n494\' - 11 243/256"\n\nMAIN LEVEL\n479\' - 11 243/256"\nTRUCK APRON\n475\' - 11 243/256"\n\nSOUTH ELEVATION 5\n3/32" = 1\'-0" A-101 A-201\n\nSheet Size: E1\n\nSheet Title:\n\nEXTERIOR\nELEVATIONS\n\nSheet No:\n\nA-201' | page_036.png
+[13:25:18] DEBUG      Page  37 | [ocr   ] 'Sheet Size:\nE1\n\nSheet Title:\n\nINTERIOR\nELEVATIONS\n\nSheet No:\n\nA-251' | page_037.png
+[13:25:21] DEBUG      Page  38 | [ocr   ] 'Sheet Size:\nE1\n\nSheet Title:\n\nE/W BUILDING\nSECTIONS\n\nSheet No:\n\nA-301' | page_038.png
+[13:25:23] DEBUG      Page  39 | [ocr   ] 'Sheet Size:\nE1\n\nSheet Title:\n\nN/S BUILDING\nSECTIONS\n\nSheet No:\n\nA-311' | page_039.png
+[13:25:26] DEBUG      Page  40 | [ocr   ] 'Sheet Size:\nE1\n\nSheet Title:\n\nE/W WALL\nSECTIONS\n\nSheet No:\n\nA-351' | page_040.png
+[13:25:29] DEBUG      Page  41 | [ocr   ] 'Sheet Size:\nE1\n\nSheet Title:\n\nE/W WALL\nSECTIONS\n\nSheet No:\n\nA-352' | page_041.png
+[13:25:32] DEBUG      Page  42 | [ocr   ] 'Sheet Size:\nE1\n\nSheet Title:\n\nE/W WALL\nSECTIONS\n\nSheet No:\n\nA-353' | page_042.png
+[13:25:34] DEBUG      Page  43 | [ocr   ] 'Sheet Size:                    E1\n\nSheet Title:\n\nN/S WALL\nSECTIONS\n\n\n\n\nSheet No:\n\nA-361' | page_043.png
+[13:25:37] DEBUG      Page  44 | [ocr   ] 'Sheet Size:                E1\n\nSheet Title:\n\nN/S WALL\nSECTIONS\n\n\n\n\nSheet No:\n\nA-362' | page_044.png
+[13:25:43] DEBUG      Page  45 | [ocr   ] '/4"\n\n2-HR RATED 6" INSULATED\nMETAL PANEL (R-xx)\n\nS#\n\nCURTAIN WALL/ STOREFRONT\nSEE A-###\n\nSheet Size:\nE1\n\nSheet Title:\n\nMAIN FLOOR\nENLARGED\nFLOOR PLANS\n\nSheet No:\n\nA-401\n\nFLOOR PLAN\n2\n3/16" = 1\'-0"\nA-101 A-401' | page_045.png
+[13:25:50] DEBUG      Page  46 | [ocr   ] '4.7\n\n2-HR RATED 6" INSULATED\nMETAL PANEL (R-xx)\n\nS#\n\nCURTAIN WALL/ STOREFRONT\nSEE A-###\n\nB\n\nOFFICES PLAN\n3/16" = 1\'-0"\n\n1\nA-102 A-405\n\nSheet Size:\nE1\n\nSheet Title:\n\n2ND FLOOR\nENLARGED\nFLOOR PLANS\n\nSheet No:\n\nA-405' | page_046.png
+[13:25:56] DEBUG      Page  47 | [ocr   ] 'Sheet Size:\nE1\n\nSheet Title:\n\nENLARGED\nRESTROOM\nPLANS AND\nELEVATIONS\n\nSheet No:\n\nA-411\n\n2-HR RATED 6" INSULATED\nMETAL PANEL (R-xx)\n\nS#\n\nCURTAIN WALL/ STOREFRONT\nSEE A-###\n\n\'S RESTROOM\n3\n1/4" = 1\'-0"\nA-405 A-411' | page_047.png
+[13:26:02] DEBUG      Page  48 | [ocr   ] 'Sheet Size:\nE1\n\nSheet Title:\n\nENLARGED\nPLANS AND\nELEVATIONS\n\nSheet No:\n\nA-415\n\n6" EPOXY BASE\n\n2-HR RATED 6" INSULATED\nMETAL PANEL (R-xx)\n\nS#\n\nCURTAIN WALL/ STOREFRONT\nSEE A-###\n\nNOTE: SEE SHEET G-503 FOR MOUNTING\nHEIGHTS, CLEARANCES, AND SPACING.\n\nFOUNTAIN ALCOVE     B\n1/2" = 1\'-0"    A-401 A-415' | page_048.png
+[13:26:07] DEBUG      Page  49 | [ocr   ] 'Sheet Size:\nE1\n\nSheet Title:\n\nMAIN FLOOR\nENLARGED\nFINISH PLANS\n\nSheet No:\n\nA-421\n\nR FINISH PLAN 2\n3/16" = 1\'-0"\nA-121 A-421' | page_049.png
+[13:26:11] DEBUG      Page  50 | [ocr   ] 'Sheet Size:\nE1\n\nSheet Title:\n\n2ND FLOOR\nENLARGED\nFINISH PLANS\n\nSheet No:\n\nA-422\n\n4.7\n\nB\n\nS FINISH PLAN\n1\n3/16" = 1\'-0"\nA-422' | page_050.png
+[13:26:15] DEBUG      Page  51 | [ocr   ] 'Sheet Size:\nE1\n\nSheet Title:\n\nMAIN FLOOR\nENLARGED\nREFLECTED\nCEILING\nPLANS\n\nSheet No:\n\nA-431\n\nCEILING PLAN 2\n3/16" = 1\'-0" A-131 A-431' | page_051.png
+[13:26:20] DEBUG      Page  52 | [ocr   ] 'Sheet Size:\nE1\n\nSheet Title:\n\n2ND FLOOR\nENLARGED\nREFLECTED\nCEILING\nPLANS\n\nSheet No:\n\nA-432\n\nCEILING PLAN\n1\n3/16" = 1\'-0"\nA-132 A-432' | page_052.png
+[13:26:24] DEBUG      Page  53 | [ocr   ] 'Sheet Size:                    E1\n\nSheet Title:\n\nVERTICAL\nCIRCULATION\n\n\nSheet No:\n\n\nSTAIR TOWER 3D    1        A-451\n                           A-451' | page_053.png
+[13:26:28] DEBUG      Page  54 | [ocr   ] 'Sheet Size:\nE1\n\nSheet Title:\n\nVERTICAL\nCIRCULATION\n\nSheet No:\n\nA-452\n\nMAIN LEVEL\n479\' - 11 243/256"\n\nSTAIR 2 - SECTION 1\n3\n1/4" = 1\'-0"\nA-141 A-452' | page_054.png
+[13:26:32] DEBUG      Page  55 | [ocr   ] 'Sheet Size:\nE1\n\nSheet Title:\n\nENLARGED\nRAMP PLANS\nAND\nSECTIONS\n\nSheet No:\n\nA-456' | page_055.png
+[13:26:37] DEBUG      Page  56 | [ocr   ] 'Sheet Size:\nE1\n\nSheet Title:\n\nWALL BASE\nDETAILS\n\nSheet No:\n\nCONC - WALL BASE AT LOADING DOCK\n14\nA-501\n1" = 1\'-0"\nA-352 A-501' | page_056.png
+[13:26:43] DEBUG      Page  57 | [ocr   ] 'Sheet Size:                    E1\n\nSheet Title:\n\nWALL DETAILS\n\n\n\nSheet No:\n\n\nIMP CORNER 19      A-505\n3" = 1\'-0"    A-505\n\n\nCH FINISH)\n\n\nFOLDS\nIS\n\n\n1" MIN. THERMAL\nCUT FACE OF IMP' | page_057.png
+[13:26:51] DEBUG      Page  58 | [ocr   ] '26 GA PREFINISHED METAL TRIM\nATTACHED W / #8x3/4" WAFER HEAD\nTEK SCREW @ 6" OC (HEM EDGES &\nMATCH IMP FINISH)\n\nIF APPLICABLE: CONDUIT FOR HEAT-\nTRACE; COORDINATE W/ BASE PLATE(S)\n\nINSULATED METAL PANEL PER\nSCHEDULE\n\nLINE OF FOUNDATION\n\nSheet Size:\nE1\n\nSheet Title:\n\nDOOR &\nWINDOW\nDETAILS\n\nJAMB\n\nSheet No:\n\nOVERHEAD DOOR @ IMP\n20\n1 1/2" = 1\'-0"\nA-511\n\nA-511' | page_058.png
+[13:26:56] DEBUG      Page  59 | [ocr   ] 'Sheet Size:\nE1\n\nSheet Title:\n\nINTERIOR\nDETAILS\n\nSheet No:\n\nSCHLUTER DILEX-AHK REVEAL,\nANODIZED ALUMINUM\n\nFLOOR TILE PER SCHEDULE\n\nTILE BASE\n2\nA-521\n6" = 1\'-0"\nA-521' | page_059.png
+[13:26:59] DEBUG      Page  60 | [ocr   ] 'Sheet Size:\nE1\n\nSheet Title:\n\nCEILING\nDETAILS\n\nSheet No:\n\nA-531' | page_060.png
+[13:27:04] DEBUG      Page  61 | [ocr   ] 'Sheet Size:\nE1\n\nSheet Title:\n\nCEILING\nDETAILS\n\nSheet No:\n\n6"\nMIN\n\nMETAL STUD\n\n5/8" GYPSUM\nWALL BOARD\n\nVB CEILING TO METAL STUD WALL SOFFIT\n20\n1 1/2" = 1\'-0"\nA-415 A-532\n\nA-532' | page_061.png
+[13:27:09] DEBUG      Page  62 | [ocr   ] 'FASTENER\n\nINSULATED METAL WALL PANEL\nPER PLAN\n\nSheet Size:\nE1\n\nSheet Title:\n\nROOF DETAILS\n\nSheet No:\n\nIMP KING SPAN RAKE\n16\nA-541\n3" = 1\'-0"\nA-361 A-541' | page_062.png
+[13:27:16] DEBUG      Page  63 | [ocr   ] 'Sheet Size:\nE1\n\nSheet Title:\n\nSTAIR DETAILS\n\nSheet No:\n\n12 GALV. STEEL CHANNEL\nSTAIRS STRINGERS\n\nCLOSED RISER\n\n1 1/2" STEEL PAN / CONCRETE\nTREAD STAIR TREADS\n\nEXPANSION ANCHOR AND\nSTEEL ANGLE CLIP\n\n1" GROUT SPACE FOR LEVELING\n\n11"\n\nSTAIR - STEEL PAN STAIR BASE DETAIL 16\n1" = 1\'-0"\nA-451 A-551\n\nA-551' | page_063.png
+[13:27:22] DEBUG      Page  64 | [ocr   ] '1 x (4)\n\n16" DIA X 1/2" GALV\nSTEEL BASE\nPLATE\n\nSTRUCTURAL SLAB\n\n1/2" x 7" GALV. NELSON\nSTUDS W/ WASHER, 8 EA\nEMBED TUBE IN SLAB\n\nTYP. INTERIOR BOLLARD 1\n3/4" = 1\'-0"    A-561\n\nSheet Size:\nE1\n\nSheet Title:\n\nMISCELLANEOUS\nDETAILS\n\nSheet No:\n\nA-561' | page_064.png
+[13:27:26] DEBUG      Page  65 | [ocr   ] 'Sheet Size:\nE1\n\nSheet Title:\n\nDOOR TYPES,\nSCHEDULE &\nHARDWARE\n\nSheet No:\n\nA-601' | page_065.png
+[13:27:30] DEBUG      Page  66 | [ocr   ] 'Sheet Size:\nE1\n\nSheet Title:\n\nWINDOW &\nSTOREFRONT\nELEVATIONS &\nSCHEDULE\n\nSheet No:\n\nA-611\n\nTYPE 25\n\nLEGEND\n1/4" = 1\'-0"' | page_066.png
+[13:27:33] DEBUG      Page  67 | [ocr   ] 'Sheet Size:                    E1\n\nSheet Title:\n\nFINISH\nSCHEDULES\n\n\n\n\nSheet No:\n\nA-621' | page_067.png
+[13:27:33] DEBUG      Page  68 | [native] 'TOF\nTOP OF FOUNDATION/FOOTING\nTOP\nTOP\nTOC\nTOP OF CONCRETE\nTOF\nTOP OF FOUNDATION\nTOS\nTOP OF STEEL\nTOW\nTOP OF WALL\nTRANS\nTRANSVERSE\nTYP\nTYPICAL\nULT\nULTIMATE DESIGN\nUNO\nUNLESS NOTED OTHERWISE\nUS\nUNDERSIDE\nUT\nULTRASONIC TESTING\nVEF\nVERTICAL EACH FACE\nVERT\nVERTICAL\nVIF\nVERTICAL INSIDE FACE OR VERIFY IN FIELD\nVOF\nVERTICAL OUTSIDE FACE\nW\nW-SHAPE\nW/\nWITH\nW/O\nWITHOUT\nWD\nWOOD\nWF\nWIDE-FLANGE\nWHS\nWELDED HEADED STUD\nWP\nWORKING POINT\nWS\nWELDED SHEAR STUD\nWT\nWEIGHT\nWWF\nWELDED WIRE FABRIC\nSheet No:\nSheet Title:\nSheet Size:\nE1\nS-000\nSTRUCTURAL\nGENERAL\nNOTES' | page_068.png
+[13:27:33] DEBUG      Page  69 | [native] 'Sheet No:\nSheet Title:\nSheet Size:\nE1\nS-001\nSTRUCTURAL\nSPECIAL\nINSPECTION\nSCHEDULE' | page_069.png
+[13:27:33] DEBUG      Page  70 | [native] 'Sheet No:\nSheet Title:\nSheet Size:\nE1\nS-100\nOVERALL\nROOF\nLOADING\nPLAN' | page_070.png
+[13:27:33] DEBUG      Page  71 | [native] 'Sheet No:\nSheet Title:\nSheet Size:\nE1\nS-110\nOVERALL\nFOUNDATION\nPLAN\n1/16" = 1\'-0"\nA-201 S-110\n1\nOVERALL FOUNDATION PLAN' | page_071.png
+[13:27:33] DEBUG      Page  72 | [native] 'Sheet No:\nSheet Title:\nSheet Size:\nE1\nS-111\nENLARGED\nFOUNDATION\nPLAN -\nWAREHOUSE\n3/32" = 1\'-0"\nA-201 S-111\n1\nD FOUNDATION PLAN - WAREHOUSE' | page_072.png
+[13:27:33] DEBUG      Page  73 | [native] 'Sheet No:\nSheet Title:\nSheet Size:\nE1\nS-112\nENLARGED\nFOUNDATION\nPLAN - MAIN\nFLOOR' | page_073.png
+[13:27:33] DEBUG      Page  74 | [native] 'Sheet No:\nSheet Title:\nSheet Size:\nE1\nS-113\nENLARGED\nFOUNDATION\nPLAN - (E)\nBUILDING\n1" = 10\'-0"\nA-201 S-113\n1\nED FOUNDATION PLAN - (E) BUILDING' | page_074.png
+[13:27:33] DEBUG      Page  75 | [native] 'Sheet No:\nSheet Title:\nSheet Size:\nE1\nS-120\nOVERALL\nFLOOR\nFRAMING\nPLAN\n1/16" = 1\'-0"\nA-201 S-120\n1\nALL FLOOR FRAMING PLAN - SECOND' | page_075.png
+[13:27:33] DEBUG      Page  76 | [native] 'Sheet No:\nSheet Title:\nSheet Size:\nE1\nS-121\nENLARGED\nFRAMING\nPLAN - OFFICE\n3/16" = 1\'-0"\nA-201 S-121\n2\nFRAMING PLAN - 2ND FLOOR OFFICE' | page_076.png
+[13:27:33] DEBUG      Page  77 | [native] 'Sheet No:\nSheet Title:\nSheet Size:\nE1\nS-130\nOVERALL\nROOF\nFRAMING\nPLAN\n1/16" = 1\'-0"\nA-201 S-130\n1\nOVERALL ROOF FRAMING PLAN' | page_077.png
+[13:27:33] DEBUG      Page  78 | [native] 'xBL6\nSheet No:\nSheet Title:\nSheet Size:\nE1\nS-131\nENLARGED\nROOF\nFRAMING\nPLAN -\nWAREHOUSE\n3/32" = 1\'-0"\nA-201 S-131\n1\nROOF FRAMING PLAN - WAREHOUSE' | page_078.png
+[13:27:33] DEBUG      Page  79 | [native] 'Sheet No:\nSheet Title:\nSheet Size:\nE1\nS-132\nENLARGED\nROOF\nFRAMING\nPLAN - (E)\nBUILDING\n1" = 10\'-0"\nA-201 S-132\n1\nROOF FRAMING PLAN - (E) BUILDING' | page_079.png
+[13:27:33] DEBUG      Page  80 | [native] 'Sheet No:\nSheet Title:\nSheet Size:\nE1\nS-200\nSTRUCTURAL\nFRAMING\nELEVATIONS\n1/8" = 1\'-0"\nS-110 S-200\n3\nRAMING ELEVATION - WAREHOUSE SOUTH' | page_080.png
+[13:27:33] DEBUG      Page  81 | [native] 'Sheet No:\nSheet Title:\nSheet Size:\nE1\nS-201\nSTRUCTURAL\nFRAMING\nELEVATIONS' | page_081.png
+[13:27:33] DEBUG      Page  82 | [native] 'Sheet No:\nSheet Title:\nSheet Size:\nE1\nS-202\nSTRUCTURAL\nFRAMING\nELEVATIONS' | page_082.png
+[13:27:33] DEBUG      Page  83 | [native] 'Sheet No:\nSheet Title:\nSheet Size:\nE1\nS-203\nSTRUCTURAL\nFRAMING\nELEVATIONS\n1/8" = 1\'-0"\nS-110 S-203\n4\nAMING ELEVATION - (E) BUILDING GRID X6' | page_083.png
+[13:27:34] DEBUG      Page  84 | [native] 'Sheet No:\nSheet Title:\nSheet Size:\nE1\nS-204\nSTRUCTURAL\nFRAMING\nELEVATIONS' | page_084.png
+[13:27:34] DEBUG      Page  85 | [native] 'Sheet No:\nSheet Title:\nSheet Size:\nE1\nS-400\nTYPICAL\nDETAILS -\nCONCRETE' | page_085.png
+[13:27:34] DEBUG      Page  86 | [native] 'Sheet No:\nSheet Title:\nSheet Size:\nE1\nS-410\nFOUNDATION\nFRAMING\nDETAILS' | page_086.png
+[13:27:34] DEBUG      Page  87 | [native] 'Sheet No:\nSheet Title:\nSheet Size:\nE1\nS-420\nFOUNDATION\nCONNECTION\nDETAILS' | page_087.png
+[13:27:34] DEBUG      Page  88 | [native] 'Sheet No:\nSheet Title:\nSheet Size:\nE1\nS-430\nBRACED\nFRAME\nFOUNDATION\nDETAILS' | page_088.png
+[13:27:34] DEBUG      Page  89 | [native] 'Sheet No:\nSheet Title:\nSheet Size:\nE1\nS-500\nTYPICAL\nDETAILS -\nSTEEL' | page_089.png
+[13:27:34] DEBUG      Page  90 | [native] 'Sheet No:\nSheet Title:\nSheet Size:\nE1\nS-510\nSTEEL\nFRAMING\nDETAILS' | page_090.png
+[13:27:34] DEBUG      Page  91 | [native] '3/4" CAP PLATE\n(2) 3/4" DIA. \nA325 BOLTS\nJO\nCO\n1/2" M\nCAP PL\nSheet No:\nSheet Title:\nSheet Size:\nE1\nS-520\nSTEEL\nCONNECTION\nDETAILS\n3/4" = 1\'-0"\nS-520\n8\nJOIST AT WF COLUMN WEAK' | page_091.png
+[13:27:34] DEBUG      Page  92 | [native] 'Sheet No:\nSheet Title:\nSheet Size:\nE1\nS-521\nSTEEL\nCONNECTION\nDETAILS' | page_092.png
+[13:27:34] DEBUG      Page  93 | [native] 'Sheet No:\nSheet Title:\nSheet Size:\nE1\nS-530\nBRACED\nFRAME STEEL\nDETAILS' | page_093.png
+[13:27:34] DEBUG      Page  94 | [native] 'Sheet No:\nSheet Title:\nSheet Size:\nE1\nS-540\nMOMENT\nFRAME STEEL\nDETAILS' | page_094.png
+[13:27:34] DEBUG      Page  95 | [native] 'Sheet No:\nSheet Title:\nSheet Size:\nE1\nS-600\nTYPICAL\nDETAILS -\nLIGHT GAUGE' | page_095.png
+[13:27:34] DEBUG      Page  96 | [native] 'Sheet No:\nSheet Title:\nSheet Size:\nE1\nS-610\nLIGHT GAUGE\nFRAMING\nDETAILS' | page_096.png
+[13:27:34] DEBUG      Page  97 | [native] 'MAIN LEVEL\n479\' - 11 243/256"\n1/2\nL3X3X1/2\nTYP @ \nHSS4X4 \nLANDING COL\nS-420\n5\nSheet No:\nSheet Title:\nSheet Size:\nE1\nS-700\nSTAIR\nFRAMING\nPLAN &\nELEVATIONS\n1/4" = 1\'-0"\nS-700 S-700\n7\nR FRAMING ELEVATION - STAIR 1 GRID 4.6' | page_097.png
+[13:27:34] DEBUG      Page  98 | [native] 'Sheet No:\nSheet Title:\nSheet Size:\nE1\nS-701\nSTAIR\nFRAMING\nPLAN &\nELEVATIONS' | page_098.png
+[13:27:34] DEBUG      Page  99 | [native] 'Sheet No:\nSheet Title:\nSheet Size:\nE1\nS-710\nSTAIR\nFRAMING\nDETAILS' | page_099.png
+[13:27:34] INFO     All region images saved to D:\Projects\PyCharmProjects\PIPMODULES\Classification\PDFClassificationEngine\debug\region_img
+[13:27:34] INFO     ======================================================================
+[13:27:34] INFO     DONE

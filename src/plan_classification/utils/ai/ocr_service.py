@@ -6,11 +6,11 @@ from anthropic import Anthropic
 
 
 class OCRService:
-    """Extracts text from images using Sonnet 4.5 vision"""
+    """Extracts text from images using Claude vision"""
 
-    def __init__(self, api_key: str):
+    def __init__(self, api_key: str, model: str = "claude-sonnet-4-5-20250929"):
         self.client = Anthropic(api_key=api_key)
-        self.model  = "claude-sonnet-4-5-20250929"
+        self.model  = model
 
     def extract_text(self, image_bytes: bytes, media_type: str = "image/jpeg" ) -> str:
 
@@ -54,7 +54,7 @@ class OCRService:
             }]
         )
 
-        raw = response.content[0].text
+        raw   = response.content[0].text
         match = re.search(r'---BEGIN OCR---(.*?)---END OCR---', raw, re.DOTALL)
 
         if match:

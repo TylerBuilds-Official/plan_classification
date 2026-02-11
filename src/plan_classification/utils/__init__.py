@@ -1,18 +1,9 @@
-from .ai.ai_classifier import (
-    AIClassifier, OpenAIClassifier, ClaudeClassifier,
-    ClassifierPool, PageClassification, create_classifier
-)
+"""Utility modules"""
 
+from .ai.ocr_service import OCRService
 from .ai.ai_summary_service import AISummaryService
 
-
 __all__ = [
-    "AIClassifier",
-    "OpenAIClassifier",
-    "ClaudeClassifier",
-    "ClassifierPool",
-    "PageClassification",
-    "create_classifier",
-
-    "AISummaryService",
+    'OCRService',
+    'AISummaryService',
 ]

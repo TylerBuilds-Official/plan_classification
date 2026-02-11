@@ -4,13 +4,16 @@ AI-assisted detection with PyMuPDF precision and vision-based OCR fallback
 """
 import json
 import re
+import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import List, Dict
 
 import fitz
 
 from ..utils.pdf.pdf_utils import extract_text_from_region, extract_image_from_region, optimize_image_for_api
-from ..engine import CATEGORY_PATTERNS
+from ..constants import CATEGORY_PATTERNS, extract_sheet_number
 from ..utils.ai.ocr_service import OCRService
+from ..pipeline_config import PipelineConfig
 from ._dataclass.region_result import RegionResult
 from ._dataclass.validation_result import ValidationResult
 from ._errors.region_detection_error import RegionDetectionError
@@ -59,9 +62,6 @@ AREA_KEYWORDS = {
     "bottom-center": ["bottom center", "bottom middle", "lower center"],
 }
 
-# Region padding added to PyMuPDF-detected text blocks (as ratio of page)
-REGION_PADDING = 0.025
-
 
 class RegionHandler:
     """
@@ -74,10 +74,11 @@ class RegionHandler:
     Phase 2 — Per-page classification uses the locked region
     """
 
-    def __init__(self, anthropic_api_key: str):
-        self.anthropic_api_key = anthropic_api_key
-        self.ocr              = OCRService(api_key=anthropic_api_key)
-        self.total_cost       = 0.0
+    def __init__(self, config: PipelineConfig):
+        self.config     = config
+        self.ocr        = OCRService(api_key=config.anthropic_api_key, model=config.ocr_model)
+        self.total_cost = 0.0
+        self.timings: dict[str, float] = {}
 
 
     def auto_detect_region(self, pdf_path: str, logger=None ) -> RegionResult:
@@ -89,17 +90,19 @@ class RegionHandler:
         doc.close()
 
         # Pick sample pages — middle first, then spread out
-        sample_indices = self._pick_sample_pages(pdf_path, count=3)
+        sample_indices = self._pick_sample_pages(pdf_path, count=self.config.sample_count)
 
         if logger:
             logger.info(f"Sample pages selected: {[i + 1 for i in sample_indices]}")
 
         # Try each sample page until AI reads a sheet number
         ai_reading = None
+        t0 = time.perf_counter()
         for page_idx in sample_indices:
             ai_reading = self._ai_read_page(pdf_path, page_idx, logger=logger)
             if ai_reading and ai_reading.get("sheet_number"):
                 break
+        self.timings["ai_read"] = time.perf_counter() - t0
 
         if not ai_reading or not ai_reading.get("sheet_number"):
             raise RegionDetectionError(
@@ -114,15 +117,20 @@ class RegionHandler:
             logger.info(f"AI detected: sheet_number={sheet_number!r}, area={area!r}")
 
         # Path A: Try native text block search
+        t0 = time.perf_counter()
         region = self._find_native_text_block(pdf_path, sheet_number, logger=logger)
+        self.timings["native_search"] = time.perf_counter() - t0
+
         if region:
             padded = self._pad_region(region)
+            t0     = time.perf_counter()
             validation = self._validate_region(pdf_path, padded, logger=logger)
+            self.timings["native_validation"] = time.perf_counter() - t0
 
             if logger:
                 logger.info(f"Path A (native text) — validation: {validation.match_rate:.0%}")
 
-            if validation.match_rate >= 0.5:
+            if validation.match_rate >= self.config.min_validation_rate:
 
                 return RegionResult(
                     region=padded,
@@ -137,19 +145,27 @@ class RegionHandler:
         if logger:
             logger.info(f"Path B (OCR) — scanning candidates for area: {area!r}")
 
-        candidates = self._get_candidates_for_area(area)
+        candidates       = self._get_candidates_for_area(area)
+        ocr_scan_total   = 0.0
+        ocr_val_total    = 0.0
 
         for candidate in candidates:
+            t0         = time.perf_counter()
             ocr_result = self._ocr_candidate_region(pdf_path, candidate, sample_indices[0], logger=logger)
+            ocr_scan_total += time.perf_counter() - t0
 
             if ocr_result:
-                padded     = self._pad_region(candidate)
+                padded = self._pad_region(candidate)
+                t0     = time.perf_counter()
                 validation = self._validate_region_ocr(pdf_path, padded, logger=logger)
+                ocr_val_total += time.perf_counter() - t0
 
                 if logger:
                     logger.info(f"  Hit on {candidate.get('name', '?')} — validation: {validation.match_rate:.0%}")
 
-                if validation.match_rate >= 0.4:
+                if validation.match_rate >= self.config.min_validation_rate:
+                    self.timings["ocr_scan"]       = ocr_scan_total
+                    self.timings["ocr_validation"] = ocr_val_total
 
                     return RegionResult(
                         region=padded,
@@ -159,6 +175,9 @@ class RegionHandler:
                         detected_samples=validation.extracted_numbers,
                         validation_score=validation.match_rate
                     )
+
+        self.timings["ocr_scan"]       = ocr_scan_total
+        self.timings["ocr_validation"] = ocr_val_total
 
         # All paths exhausted
         raise RegionDetectionError(
@@ -183,17 +202,17 @@ class RegionHandler:
         mat       = fitz.Matrix(2.0, 2.0)
         pix       = page.get_pixmap(matrix=mat, alpha=False)
         img_bytes = pix.tobytes(output='png')
-        img_opt   = optimize_image_for_api(img_bytes, max_dimension=2048)
+        img_opt   = optimize_image_for_api(img_bytes, max_dimension=self.config.max_image_dimension)
         doc.close()
 
         b64    = base64.b64encode(img_opt).decode('utf-8')
-        client = Anthropic(api_key=self.anthropic_api_key)
+        client = Anthropic(api_key=self.config.anthropic_api_key)
 
         if logger:
             logger.info(f"  Sending page {page_idx + 1} to Opus for reading...")
 
         response = client.messages.create(
-            model="claude-opus-4-5-20251101",
+            model=self.config.vision_model,
             max_tokens=512,
             system=(
                 "You are an expert at reading construction and architectural drawings. "
@@ -201,7 +220,6 @@ class RegionHandler:
                 "Sheet numbers use discipline prefixes like A-101, S-201, E-301, M-401, "
                 "P-501, C-101, G-001, L-101, FP-101, FS-101, LS-101, SS-101, T-101. "
                 "Separators may be hyphens, dots, or spaces (e.g. A-101, A.101, A 101, A1.01).\n\n"
-                "Sometimes, there are references to multiple sheets on a page. We only want THAT PAGES sheet title.\n"
                 "Return ONLY valid JSON, no markdown:\n"
                 '{"sheet_number": "exactly as printed", "area": "bottom-right"}\n\n'
                 "For area, use one of: bottom-right, bottom-left, top-right, top-left, "
@@ -265,17 +283,17 @@ class RegionHandler:
         """Search PyMuPDF text blocks for the exact sheet number string"""
 
         doc            = fitz.open(pdf_path)
-        sample_indices = self._pick_sample_pages(pdf_path, count=5)
+        sample_indices = self._pick_sample_pages(pdf_path, count=self.config.validation_samples)
         found          = []
 
         # Clean the sheet number for flexible matching
         clean_target = re.sub(r'[\s\-.]', '', sheet_number).upper()
 
         for page_idx in sample_indices:
-            page       = doc.load_page(page_idx)
-            page_w     = page.rect.width
-            page_h     = page.rect.height
-            blocks     = page.get_text("dict")["blocks"]
+            page   = doc.load_page(page_idx)
+            page_w = page.rect.width
+            page_h = page.rect.height
+            blocks = page.get_text("dict")["blocks"]
 
             for block in blocks:
                 if block.get("type") != 0:
@@ -287,12 +305,12 @@ class RegionHandler:
                         clean_span = re.sub(r'[\s\-.]', '', span_text).upper()
 
                         if clean_target in clean_span:
-                            bbox = span["bbox"]
+                            bbox   = span["bbox"]
                             region = {
-                                "x_ratio":  bbox[0] / page_w,
-                                "y_ratio":  bbox[1] / page_h,
-                                "w_ratio":  (bbox[2] - bbox[0]) / page_w,
-                                "h_ratio":  (bbox[3] - bbox[1]) / page_h,
+                                "x_ratio": bbox[0] / page_w,
+                                "y_ratio": bbox[1] / page_h,
+                                "w_ratio": (bbox[2] - bbox[0]) / page_w,
+                                "h_ratio": (bbox[3] - bbox[1]) / page_h,
                             }
                             found.append(region)
 
@@ -336,7 +354,7 @@ class RegionHandler:
 
         doc       = fitz.open(pdf_path)
         page      = doc.load_page(page_idx)
-        img_bytes = extract_image_from_region(page, region, zoom=4.0, format='PNG')
+        img_bytes = extract_image_from_region(page, region, zoom=self.config.ocr_zoom, format='PNG')
         doc.close()
 
         ocr_text = self.ocr.extract_text(img_bytes, media_type="image/png")
@@ -344,7 +362,7 @@ class RegionHandler:
         if logger:
             logger.debug(f"    OCR [{region.get('name', '?')}]: {ocr_text!r}")
 
-        if self._extract_sheet_number(ocr_text):
+        if extract_sheet_number(ocr_text):
 
             return ocr_text
 
@@ -354,11 +372,12 @@ class RegionHandler:
     # ── Validation ──────────────────────────────────────────────────────────
 
     def _validate_region(self, pdf_path: str, region: dict,
-            sample_size: int = 5,
+            sample_size: int | None = None,
             logger=None ) -> ValidationResult:
 
         """Validate region using native text extraction"""
 
+        sample_size    = sample_size or self.config.validation_samples
         doc            = fitz.open(pdf_path)
         sample_indices = self._pick_sample_pages(pdf_path, count=sample_size)
 
@@ -370,9 +389,10 @@ class RegionHandler:
             page = doc.load_page(page_idx)
             text = extract_text_from_region(page, region)
 
-            if sheet_num := self._extract_sheet_number(text):
+            result = extract_sheet_number(text)
+            if result:
                 matched += 1
-                extracted_numbers.append(sheet_num)
+                extracted_numbers.append(result[1])
             else:
                 failed_pages.append(page_idx)
 
@@ -384,7 +404,7 @@ class RegionHandler:
             logger.debug(f"  Native validation: {matched}/{len(sample_indices)} pages matched")
 
         return ValidationResult(
-            success=match_rate >= 0.5,
+            success=match_rate >= self.config.min_validation_rate,
             match_rate=match_rate,
             matched_pages=matched,
             total_pages=len(sample_indices),
@@ -394,30 +414,48 @@ class RegionHandler:
 
 
     def _validate_region_ocr(self, pdf_path: str, region: dict,
-            sample_size: int = 5,
+            sample_size: int | None = None,
             logger=None ) -> ValidationResult:
 
-        """Validate region using Sonnet OCR instead of native text"""
+        """Validate region using Sonnet OCR in parallel"""
 
-        doc            = fitz.open(pdf_path)
+        sample_size    = sample_size or self.config.validation_samples
         sample_indices = self._pick_sample_pages(pdf_path, count=sample_size)
 
+        # Pre-render all region images (fast, CPU-bound)
+        images = {}
+        doc    = fitz.open(pdf_path)
+        for page_idx in sample_indices:
+            page              = doc.load_page(page_idx)
+            images[page_idx]  = extract_image_from_region(page, region, zoom=self.config.ocr_zoom, format='PNG')
+        doc.close()
+
+        # OCR in parallel (IO-bound API calls)
+        results = {}
+
+        def _ocr_page(page_idx: int ) -> tuple[int, str]:
+            ocr_text = self.ocr.extract_text(images[page_idx], media_type="image/png")
+
+            return page_idx, ocr_text
+
+        with ThreadPoolExecutor(max_workers=self.config.max_workers) as pool:
+            futures = {pool.submit(_ocr_page, idx): idx for idx in sample_indices}
+            for future in as_completed(futures):
+                page_idx, ocr_text = future.result()
+                results[page_idx]  = ocr_text
+
+        # Tally
         matched           = 0
         extracted_numbers = []
         failed_pages      = []
 
         for page_idx in sample_indices:
-            page      = doc.load_page(page_idx)
-            img_bytes = extract_image_from_region(page, region, zoom=4.0, format='PNG')
-            ocr_text  = self.ocr.extract_text(img_bytes, media_type="image/png")
-
-            if sheet_num := self._extract_sheet_number(ocr_text):
+            result = extract_sheet_number(results[page_idx])
+            if result:
                 matched += 1
-                extracted_numbers.append(sheet_num)
+                extracted_numbers.append(result[1])
             else:
                 failed_pages.append(page_idx)
-
-        doc.close()
 
         match_rate = matched / len(sample_indices) if sample_indices else 0.0
 
@@ -425,7 +463,7 @@ class RegionHandler:
             logger.debug(f"  OCR validation: {matched}/{len(sample_indices)} pages matched")
 
         return ValidationResult(
-            success=match_rate >= 0.5,
+            success=match_rate >= self.config.min_validation_rate,
             match_rate=match_rate,
             matched_pages=matched,
             total_pages=len(sample_indices),
@@ -452,7 +490,7 @@ class RegionHandler:
         # Skip page 0 if it looks like a cover
         start = 0
         if page_count > 3:
-            first_text = doc.load_page(0).get_text("text").lower()
+            first_text  = doc.load_page(0).get_text("text").lower()
             cover_words = ['cover', 'title sheet', 'index', 'table of contents',
                            'drawing list', 'sheet index', 'project directory']
 
@@ -471,24 +509,6 @@ class RegionHandler:
         indices = [start + int(step * (i + 1)) for i in range(count)]
 
         return indices
-
-
-    @staticmethod
-    def _extract_sheet_number(text: str ) -> str | None:
-
-        """Check if text contains a valid sheet number pattern"""
-
-        if not text or not text.strip():
-
-            return None
-
-        for category, pattern in CATEGORY_PATTERNS.items():
-            match = re.search(pattern, text, re.IGNORECASE)
-            if match:
-
-                return match.group(0)
-
-        return None
 
 
     @staticmethod
@@ -513,16 +533,17 @@ class RegionHandler:
         return CANDIDATE_REGIONS["bottom-right"]
 
 
-    @staticmethod
-    def _pad_region(region: dict, padding: float = REGION_PADDING ) -> dict:
+    def _pad_region(self, region: dict ) -> dict:
 
         """Add generous padding to a region, clamped to page bounds"""
 
+        p = self.config.region_padding
+
         return {
-            "x_ratio": max(0.0, region["x_ratio"] - padding),
-            "y_ratio": max(0.0, region["y_ratio"] - padding),
-            "w_ratio": min(1.0, region["w_ratio"] + padding * 2),
-            "h_ratio": min(1.0, region["h_ratio"] + padding * 2),
+            "x_ratio": max(0.0, region["x_ratio"] - p),
+            "y_ratio": max(0.0, region["y_ratio"] - p),
+            "w_ratio": min(1.0, region["w_ratio"] + p * 2),
+            "h_ratio": min(1.0, region["h_ratio"] + p * 2),
         }
 
 
