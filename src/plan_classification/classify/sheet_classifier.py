@@ -1,6 +1,8 @@
 """
-Sheet Classifier — Parallel per-page classification using a locked region
-4-step chain: native text → OCR → full page AI → unclassified
+Sheet Classifier — Two-pass classification using a locked region
+
+Pass 1: Native text extraction (instant, zero API cost)
+Pass 2: API-bound pages only (OCR → AI vision) in parallel
 """
 import base64
 import json
@@ -23,17 +25,17 @@ DISCIPLINE_LIST = "\n".join(f"- {name}" for name in CATEGORY_PATTERNS.keys())
 
 
 class SheetClassifier:
+
     """
     Classifies every page in a PDF using a locked region
 
-    Steps per page:
-        1. Native text from region → regex match → done
-        2. No native text → Sonnet OCR region → regex match → done
-        3. OCR fails → full page to Opus with category list → done
-        4. AI can't classify → unclassified
+    Two-pass approach:
+        Pass 1 — Native text from region for ALL pages (instant, free)
+        Pass 2 — Unresolved pages hit API in parallel (OCR → AI vision)
     """
 
-    def __init__(self, config: PipelineConfig):
+    def __init__(self, config: PipelineConfig ):
+
         self.config     = config
         self.ocr        = OCRService(api_key=config.anthropic_api_key, model=config.ocr_model)
         self.client     = Anthropic(api_key=config.anthropic_api_key)
@@ -46,32 +48,72 @@ class SheetClassifier:
             region_result: RegionResult,
             logger=None ) -> list[PageResult]:
 
-        """Classify all pages in parallel using the locked region"""
+        """
+        Classify all pages using two-pass strategy
+
+        Pass 1 resolves native text pages instantly. Only unresolved
+        pages enter the thread pool, ensuring every worker does real
+        API work instead of wasting slots on instant-resolve pages.
+        """
 
         doc        = fitz.open(pdf_path)
         page_count = doc.page_count
         region     = region_result.region
+
+        # ── Pass 1: Native text (instant, zero cost) ──────────────
+        t0       = time.perf_counter()
+        results  = {}
+        api_pages = []
+
+        for i in range(page_count):
+            page        = doc.load_page(i)
+            native_text = extract_text_from_region(page, region)
+            result      = extract_sheet_number(native_text)
+
+            if result:
+                results[i] = PageResult(
+                    page_index=i,
+                    sheet_number=result[1],
+                    discipline=result[0],
+                    method="native",
+                    confidence=0.95,
+                )
+            else:
+                api_pages.append(i)
+
         doc.close()
+        self.timings["pass1_native"] = time.perf_counter() - t0
 
         if logger:
             logger.info(
-                f"Classifying {page_count} pages with {self.config.max_workers} workers "
-                f"(method: {region_result.method})"
+                f"Pass 1 (native): {len(results)} resolved, "
+                f"{len(api_pages)} need API"
             )
 
-        t0      = time.perf_counter()
-        results = {}
+        # ── Pass 2: API-bound pages only (parallel) ───────────────
+        t1      = time.perf_counter()
+        workers = min(self.config.max_workers, len(api_pages)) or 1
 
-        with ThreadPoolExecutor(max_workers=self.config.max_workers) as pool:
-            futures = {
-                pool.submit(self._classify_page, pdf_path, i, region, logger): i
-                for i in range(page_count)
-            }
+        if logger and api_pages:
+            logger.info(
+                f"Pass 2 (API): {len(api_pages)} pages with "
+                f"{workers} workers"
+            )
 
-            for future in as_completed(futures):
-                page_result         = future.result()
-                results[page_result.page_index] = page_result
+        if api_pages:
+            with ThreadPoolExecutor(max_workers=workers) as pool:
+                futures = {
+                    pool.submit(
+                        self._classify_api_page, pdf_path, i, region, logger
+                    ): i
+                    for i in api_pages
+                }
 
+                for future in as_completed(futures):
+                    page_result              = future.result()
+                    results[page_result.page_index] = page_result
+
+        self.timings["pass2_api"] = time.perf_counter() - t1
         self.timings["classify_all"] = time.perf_counter() - t0
 
         # Sum costs
@@ -89,33 +131,23 @@ class SheetClassifier:
         return ordered
 
 
-    def _classify_page(self,
+    def _classify_api_page(self,
             pdf_path: str,
             page_idx: int,
             region: dict,
             logger=None ) -> PageResult:
 
-        """Run the 4-step chain for a single page"""
+        """
+        API classification chain for a single page
+
+        Only called for pages where native text failed.
+        Steps: OCR region → AI vision full page → unclassified
+        """
 
         doc  = fitz.open(pdf_path)
         page = doc.load_page(page_idx)
 
-        # Step 1: Native text from region → label-aware extraction
-        native_text = extract_text_from_region(page, region)
-        result      = extract_sheet_number(native_text)
-
-        if result:
-            doc.close()
-
-            return PageResult(
-                page_index=page_idx,
-                sheet_number=result[1],
-                discipline=result[0],
-                method="native",
-                confidence=0.95,
-            )
-
-        # Step 2: OCR region → label-aware extraction
+        # Step 1: OCR region → label-aware extraction
         img_bytes = extract_image_from_region(page, region, zoom=self.config.ocr_zoom, format='PNG')
         ocr_text  = self.ocr.extract_text(img_bytes, media_type="image/png")
         result    = extract_sheet_number(ocr_text)
@@ -131,7 +163,7 @@ class SheetClassifier:
                 confidence=0.90,
             )
 
-        # Step 3: Full page → Opus (reads sheet number, we map discipline)
+        # Step 2: Full page → Opus (reads sheet number, we map discipline)
         ai_result = self._ai_classify_page(page, logger=logger)
         doc.close()
 
@@ -154,7 +186,7 @@ class SheetClassifier:
                 cost_usd=ai_result.get("cost", 0.0),
             )
 
-        # Step 4: Unclassified
+        # Step 3: Unclassified
         return PageResult(
             page_index=page_idx,
             sheet_number=None,

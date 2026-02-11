@@ -15,7 +15,7 @@ class PipelineConfig:
     classifier_model: str = "claude-opus-4-5-20251101"
 
     # Parallelization
-    max_workers: int = 3
+    max_workers: int = 8
 
     # Image rendering
     max_image_dimension: int   = 2048

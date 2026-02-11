@@ -3,7 +3,8 @@
 # Maps discipline name → regex pattern for sheet number matching
 # Prefixes follow CSI/NCS conventions with flexibility for separators
 CATEGORY_PATTERNS = {
-    'Architectural':   r'\bA[D]?\s*(?:[-.\s]?\d+)+[A-Z]*\b',
+    'Demo':            r'\bAD\s*(?:[-.\s]?\d+)+[A-Z]*\b',
+    'Architectural':   r'\bA\s*(?:[-.\s]?\d+)+[A-Z]*\b',
     'Civil':           r'\bC[A]?\s*(?:[-.\s]?\d+)+[A-Z]*\b',
     'Electrical':      r'\bE[LP]?\s*(?:[-.\s]?\d+)+[A-Z]*\b',
     'Fire Protection': r'\bFP\s*(?:[-.\s]?\d+)+[A-Z]*\b',
