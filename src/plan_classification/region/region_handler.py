@@ -6,46 +6,15 @@ import hashlib
 import json
 import re
 from typing import Optional, List, Tuple, Dict
-from dataclasses import dataclass, field
-from pathlib import Path
 
 import fitz
 
-from .pdf_utils import extract_text_from_region, optimize_image_for_api
-from .engine import CATEGORY_PATTERNS
-
-
-@dataclass
-class RegionResult:
-    """Result of region detection"""
-    region: Dict[str, float]
-    confidence: float
-    method: str  # cache, heuristic, ai_vision, ai_vision_validated, full_ocr
-    cost_usd: float
-    detected_samples: List[str] = None  # Sample sheet numbers found
-    validation_score: float = 0.0  # % of test pages where region worked
-    
-    def to_dict(self) -> Dict:
-        return {
-            'region': self.region,
-            'confidence': self.confidence,
-            'method': self.method,
-            'cost_usd': self.cost_usd,
-            'detected_samples': self.detected_samples or [],
-            'validation_score': self.validation_score
-        }
-
-
-@dataclass
-class ValidationResult:
-    """Result of validating a region against sample pages"""
-    success: bool
-    match_rate: float  # 0.0 - 1.0
-    matched_pages: int
-    total_pages: int
-    extracted_numbers: List[str] = field(default_factory=list)
-    failed_pages: List[int] = field(default_factory=list)
-
+from ..utils.pdf.pdf_utils import extract_text_from_region, optimize_image_for_api
+from ..engine import CATEGORY_PATTERNS
+from .region_cache import RegionCache
+from ._dataclass.region_result import RegionResult
+from ._dataclass.validation_result import ValidationResult
+from ._errors.region_detection_error import RegionDetectionError
 
 # Common sheet number locations (based on industry standards)
 # Ordered by frequency in real-world drawings
@@ -58,6 +27,7 @@ COMMON_REGIONS = [
         "h_ratio": 0.07,
         "name": "bottom-right"
     },
+
     # Bottom-right tight (smaller title blocks)
     {
         "x_ratio": 0.90,
@@ -66,6 +36,7 @@ COMMON_REGIONS = [
         "h_ratio": 0.05,
         "name": "bottom-right-tight"
     },
+
     # Title block center-right
     {
         "x_ratio": 0.70,
@@ -74,6 +45,7 @@ COMMON_REGIONS = [
         "h_ratio": 0.07,
         "name": "title-center-right"
     },
+
     # Top-right corner (some firms use this)
     {
         "x_ratio": 0.85,
@@ -82,6 +54,7 @@ COMMON_REGIONS = [
         "h_ratio": 0.07,
         "name": "top-right"
     },
+
     # Bottom-left (rare but exists)
     {
         "x_ratio": 0.01,
@@ -90,6 +63,7 @@ COMMON_REGIONS = [
         "h_ratio": 0.07,
         "name": "bottom-left"
     },
+
     # Right edge middle (vertical title blocks)
     {
         "x_ratio": 0.92,
@@ -111,68 +85,6 @@ AI_SEARCH_QUADRANTS = [
 ]
 
 
-class RegionCache:
-    """Simple file-based cache for detected regions"""
-    
-    def __init__(self, cache_file: str = None):
-        if cache_file is None:
-            cache_dir = Path.home() / ".pdfclassify_cache"
-            cache_dir.mkdir(exist_ok=True)
-            cache_file = cache_dir / "region_cache.json"
-        
-        self.cache_file = Path(cache_file)
-        self._cache = self._load_cache()
-    
-    def _load_cache(self) -> Dict:
-        """Load cache from disk"""
-        if self.cache_file.exists():
-            try:
-                with open(self.cache_file, 'r') as f:
-                    return json.load(f)
-            except:
-                return {}
-        return {}
-    
-    def _save_cache(self):
-        """Save cache to disk"""
-        try:
-            with open(self.cache_file, 'w') as f:
-                json.dump(self._cache, f, indent=2)
-        except Exception as e:
-            print(f"Warning: Could not save region cache: {e}")
-    
-    def get(self, key: str) -> Optional[Dict]:
-        """Get cached region"""
-        entry = self._cache.get(key)
-        if entry:
-            # Increment hit count
-            entry['hit_count'] = entry.get('hit_count', 0) + 1
-            self._save_cache()
-            return entry
-        return None
-    
-    def set(self, key: str, region: Dict, confidence: float, method: str, 
-            samples: List[str] = None, validation_score: float = 0.0):
-        """Cache a detected region"""
-        from datetime import datetime
-        
-        self._cache[key] = {
-            'region': region,
-            'confidence': confidence,
-            'method': method,
-            'first_seen': datetime.now().isoformat(),
-            'hit_count': 1,
-            'sample_sheet_numbers': samples or [],
-            'validation_score': validation_score
-        }
-        self._save_cache()
-
-
-class RegionDetectionError(Exception):
-    """Raised when region detection completely fails"""
-    pass
-
-
 class RegionHandler:
     """
     Fully automated sheet number region detection with validation
@@ -192,9 +104,10 @@ class RegionHandler:
         
         # Initialize AI classifier if key provided
         if openai_api_key:
-            from .utils.ai.ai_classifier import AIClassifier
+            from ..utils.ai.ai_classifier import AIClassifier
             self.ai_classifier = AIClassifier(api_key=openai_api_key)
-    
+
+
     def auto_detect_region(self, pdf_path: str, min_validation_rate: float = 0.6) -> RegionResult:
         """
         Fully automated region detection with validation
@@ -268,8 +181,10 @@ class RegionHandler:
             "Could not automatically detect sheet number location. "
             "This drawing set may have non-standard formatting or no valid sheet numbers."
         )
-    
-    def _get_cache_key(self, pdf_path: str) -> str:
+
+
+    @staticmethod
+    def _get_cache_key(pdf_path: str) -> str:
         """
         Generate cache key based on PDF fingerprint
         
@@ -289,8 +204,10 @@ class RegionHandler:
         
         cache_key = hashlib.md5('_'.join(key_parts).encode()).hexdigest()
         return cache_key
-    
-    def _get_sample_pages(self, pdf_path: str, sample_size: int = 5) -> List[int]:
+
+
+    @staticmethod
+    def _get_sample_pages(pdf_path: str, sample_size: int = 5) -> List[int]:
         """
         Intelligently select sample pages, skipping likely cover sheets
         
@@ -334,7 +251,8 @@ class RegionHandler:
         
         doc.close()
         return indices
-    
+
+
     def _validate_region(self, pdf_path: str, region: Dict[str, float], 
                          sample_size: int = 5) -> ValidationResult:
         """
@@ -377,7 +295,8 @@ class RegionHandler:
             extracted_numbers=extracted_numbers,
             failed_pages=failed_pages
         )
-    
+
+
     def _heuristic_detect(self, pdf_path: str, min_validation_rate: float) -> Optional[RegionResult]:
         """
         Tier 1: Test common locations with text extraction and validation
@@ -432,8 +351,10 @@ class RegionHandler:
             return best_result
         
         return None
-    
-    def _extract_sheet_number(self, text: str) -> Optional[str]:
+
+
+    @staticmethod
+    def _extract_sheet_number(text: str) -> Optional[str]:
         """Check if text contains a valid sheet number"""
         if not text or not text.strip():
             return None
@@ -445,7 +366,8 @@ class RegionHandler:
                 return match.group(0)
         
         return None
-    
+
+
     def _ai_detect_with_validation(self, pdf_path: str, min_validation_rate: float,
                                     max_retries: int = 3) -> Optional[RegionResult]:
         """
@@ -526,7 +448,8 @@ class RegionHandler:
                 )
         
         return None
-    
+
+
     def _call_ai_region_detection(self, images: List[bytes], 
                                    previous_attempts: List[Dict] = None) -> Optional[Dict]:
         """
@@ -641,8 +564,10 @@ It should be consistent across all pages in a set."""
         except (KeyError, ValueError, TypeError) as e:
             print(f"Failed to parse AI response: {e}")
             return None
-    
-    def _build_region_detection_prompt(self, previous_attempts: List[Dict] = None) -> str:
+
+
+    @staticmethod
+    def _build_region_detection_prompt(previous_attempts: List[Dict] = None) -> str:
         """Build detailed prompt for region detection"""
         
         base_prompt = """Analyze these construction drawing pages to find the SHEET NUMBER location.
@@ -701,7 +626,8 @@ Based on these failed attempts, please:
             base_prompt += feedback
         
         return base_prompt
-    
+
+
     def _smart_full_page_search(self, pdf_path: str) -> Optional[RegionResult]:
         """
         Tier 3: Comprehensive full page search with intelligent prioritization
@@ -777,9 +703,11 @@ Based on these failed attempts, please:
             detected_samples=validation.extracted_numbers,
             validation_score=validation.match_rate
         )
-    
-    def _group_locations_by_position(self, locations: List[Tuple], 
-                                      tolerance: float = 0.1) -> List[List[Tuple]]:
+
+
+    @staticmethod
+    def _group_locations_by_position(locations: List[Tuple],
+                                     tolerance: float = 0.1) -> List[List[Tuple]]:
         """
         Group sheet number locations by approximate position
         
@@ -821,9 +749,11 @@ Based on these failed attempts, please:
             groups.append(group)
         
         return groups
-    
-    def _calculate_average_region(self, locations: List[Tuple], 
-                                   padding: float = 0.02) -> Dict[str, float]:
+
+
+    @staticmethod
+    def _calculate_average_region(locations: List[Tuple],
+                                  padding: float = 0.02) -> Dict[str, float]:
         """
         Calculate average region from a group of locations with padding
         
@@ -852,7 +782,8 @@ Based on these failed attempts, please:
             'w_ratio': max_x - min_x,
             'h_ratio': max_y - min_y
         }
-    
+
+
     def get_total_cost(self) -> float:
         """Get total API cost for this session"""
         return self.total_cost

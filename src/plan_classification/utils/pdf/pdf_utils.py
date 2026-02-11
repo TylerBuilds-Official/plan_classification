@@ -4,7 +4,8 @@ PDF text and image extraction utilities
 import fitz  # PyMuPDF
 fitz.TOOLS.mupdf_display_errors(False)    # Suppress error messages on stderr
 fitz.TOOLS.mupdf_display_warnings(False)  # Suppress warning messages on stderr
-from typing import Tuple, Optional, Dict
+
+from typing import Dict
 from io import BytesIO
 from PIL import Image
 
@@ -30,6 +31,7 @@ def make_pdf_rect(page: fitz.Page, region: Dict[str, float]) -> fitz.Rect:
     # Clamp to page bounds and ensure valid rectangle
     x0, x1 = sorted((max(0, min(int(round(x0)), int(w))),
                      max(0, min(int(round(x1)), int(w)))))
+
     y0, y1 = sorted((max(0, min(int(round(y0)), int(h))),
                      max(0, min(int(round(y1)), int(h)))))
     
@@ -38,8 +40,8 @@ def make_pdf_rect(page: fitz.Page, region: Dict[str, float]) -> fitz.Rect:
 
 def extract_text_from_region(
     page: fitz.Page,
-    region: Dict[str, float]
-) -> str:
+    region: Dict[str, float] ) -> str:
+
     """
     Extract native PDF text from a specific region
     

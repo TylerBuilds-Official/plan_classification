@@ -7,7 +7,7 @@ from .engine import (
     CATEGORY_PATTERNS
 )
 
-from .pdf_utils import (
+from .utils.pdf.pdf_utils import (
     extract_text_from_region,
     extract_image_from_region,
     extract_full_page_image,
@@ -30,7 +30,7 @@ from .utils.ai.ai_summary_service import (
     DateResult,
 )
 
-from .region_handler import (
+from .region.region_handler import (
     RegionHandler,
     RegionResult,
     RegionDetectionError,
