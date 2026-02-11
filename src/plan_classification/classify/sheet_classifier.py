@@ -46,7 +46,8 @@ class SheetClassifier:
     def classify_all(self,
             pdf_path: str,
             region_result: RegionResult,
-            logger=None ) -> list[PageResult]:
+            logger=None,
+            on_progress: callable = None ) -> list[PageResult]:
 
         """
         Classify all pages using two-pass strategy
@@ -101,6 +102,9 @@ class SheetClassifier:
             )
 
         if api_pages:
+            completed_api = 0
+            total_api     = len(api_pages)
+
             with ThreadPoolExecutor(max_workers=workers) as pool:
                 futures = {
                     pool.submit(
@@ -110,8 +114,16 @@ class SheetClassifier:
                 }
 
                 for future in as_completed(futures):
-                    page_result              = future.result()
-                    results[page_result.page_index] = page_result
+                    page_result                     = future.result()
+                    results[page_result.page_index]  = page_result
+                    completed_api                   += 1
+
+                    if on_progress:
+                        on_progress({
+                            "phase":   "ai_classification",
+                            "current": completed_api,
+                            "total":   total_api,
+                        })
 
         self.timings["pass2_api"] = time.perf_counter() - t1
         self.timings["classify_all"] = time.perf_counter() - t0

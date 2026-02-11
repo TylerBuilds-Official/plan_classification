@@ -54,12 +54,12 @@ class BreakoutHandler:
         created_files = [] # List of dicts with category, page_count, and output_path
 
         for result in self.results:
-            category = result['category']
-            page_num = result['page_num']
+            discipline = result.get('discipline') or result.get('category', 'Unknown')
+            page_idx   = result.get('page_index') if 'page_index' in result else result.get('page_num', 0)
 
-            if category not in category_pages:
-                category_pages[category] = []
-            category_pages[category].append(page_num)
+            if discipline not in category_pages:
+                category_pages[discipline] = []
+            category_pages[discipline].append(page_idx)
 
         # Default date prefix (used when date_map doesn't have a category)
         default_date = datetime.now().strftime("%m%d%y")
@@ -71,7 +71,7 @@ class BreakoutHandler:
 
         # Create output PDFs
         total_categories = len(category_pages)
-        for cat_idx, (category, page_nums) in enumerate(category_pages.items()):
+        for cat_idx, (discipline, page_nums) in enumerate(category_pages.items()):
             output_pdf = fitz.open()
             pages_added = 0
 
@@ -81,14 +81,14 @@ class BreakoutHandler:
                     output_pdf.insert_pdf(self.doc, from_page=range_start, to_page=range_end)
                     pages_added += (range_end - range_start + 1)
                 except Exception as e:
-                    print(f"Warning: Could not add pages {range_start}-{range_end} to {category}: {e}")
+                    print(f"Warning: Could not add pages {range_start}-{range_end} to {discipline}: {e}")
             
             if pages_added == 0:
                 output_pdf.close()
                 continue
 
-            date_prefix = (date_map or {}).get(category, default_date)
-            filename = f"{date_prefix}_{category}.pdf"
+            date_prefix = (date_map or {}).get(discipline, default_date)
+            filename = f"{date_prefix}_{discipline}.pdf"
             output_path = os.path.join(self.output_dir, filename)
             
             # Save with reasonable middle-ground options, fallback to minimal
@@ -101,21 +101,21 @@ class BreakoutHandler:
                     output_pdf.save(output_path)
                     saved = True
                 except Exception as e:
-                    print(f"Warning: Could not save {category} PDF: {e}")
+                    print(f"Warning: Could not save {discipline} PDF: {e}")
             
             output_pdf.close()
 
             if saved:
                 display_pages = [p + 1 for p in sorted(page_nums)]
                 created_files.append({
-                    'category': category,
+                    'discipline': discipline,
                     'page_count': pages_added,
                     'output_path': output_path,
                     'page_numbers': display_pages
                 })
 
             if on_progress:
-                on_progress(cat_idx + 1, total_categories, category)
+                on_progress(cat_idx + 1, total_categories, discipline)
 
         self.doc.close()
 

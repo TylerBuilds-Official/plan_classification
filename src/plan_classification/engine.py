@@ -27,15 +27,30 @@ class ClassificationEngine:
 
     def classify(self,
             pdf_path: str,
-            logger=None ) -> list[PageResult]:
+            logger=None,
+            on_progress: callable = None ) -> list[PageResult]:
 
         """Run the full pipeline: detect region → classify all pages"""
+
+        if on_progress:
+            on_progress({"phase": "region_detection", "status": "started"})
 
         # Phase 1
         region = self.region_handler.auto_detect_region(pdf_path, logger=logger)
 
+        if on_progress:
+            on_progress({"phase": "region_detection", "status": "completed"})
+
         # Phase 2
-        results = self.sheet_classifier.classify_all(pdf_path, region, logger=logger)
+        if on_progress:
+            on_progress({"phase": "classification", "status": "started"})
+
+        results = self.sheet_classifier.classify_all(
+            pdf_path, region, logger=logger, on_progress=on_progress,
+        )
+
+        if on_progress:
+            on_progress({"phase": "classification", "status": "completed"})
 
         return results
 
