@@ -18,6 +18,10 @@ from .classify.sheet_classifier import SheetClassifier
 from .classify._dataclass.page_result import PageResult
 from .classify._errors.classification_error import ClassificationError
 
+# Date extraction
+from .date_extraction.date_extractor import DateExtractor, ExtractionResult, TierResult
+from .utils.date.date_utils import FoundDate
+
 # PDF utilities
 from .utils.pdf.pdf_utils import (
     extract_text_from_region,
@@ -32,7 +36,7 @@ from .utils.pdf.pdf_utils import (
 
 # AI utilities
 from .utils.ai.ocr_service import OCRService
-from .utils.ai.ai_summary_service import AISummaryService, SummaryResult, AIDirResult, DateResult
+from .utils.ai.ai_summary_service import AISummaryService, SummaryResult, AIDirResult
 
 # Breakout
 from .breakout_handler import BreakoutHandler
@@ -56,6 +60,12 @@ __all__ = [
     'PageResult',
     'ClassificationError',
 
+    # Date extraction
+    'DateExtractor',
+    'ExtractionResult',
+    'TierResult',
+    'FoundDate',
+
     # PDF utilities
     'extract_text_from_region',
     'extract_image_from_region',
@@ -71,7 +81,6 @@ __all__ = [
     'AISummaryService',
     'SummaryResult',
     'AIDirResult',
-    'DateResult',
 
     # Breakout
     'BreakoutHandler',

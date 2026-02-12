@@ -186,6 +186,7 @@ def extract_full_page_image(
     return output.getvalue()
 
 
+
 def get_pdf_page_count(pdf_path: str) -> int:
     """Get total number of pages in PDF"""
     doc = fitz.open(pdf_path)
