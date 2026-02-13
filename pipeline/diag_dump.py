@@ -1,4 +1,7 @@
-"""Diagnostic — dump raw region text for problem pages"""
+"""
+Diagnostic — dump raw region text for problem pages
+TEST FILE
+"""
 import sys
 from pathlib import Path
 

@@ -1,4 +1,7 @@
-"""Full pipeline test — region detection + parallel classification"""
+"""
+Full pipeline test — region detection + parallel classification
+TEST FILE
+"""
 import sys
 import logging
 import time
@@ -17,8 +20,6 @@ load_dotenv(ROOT / '.env')
 
 from src.plan_classification.engine import ClassificationEngine
 from src.plan_classification.pipeline_config import PipelineConfig
-from src.plan_classification.utils.pdf.pdf_utils import extract_text_from_region, extract_image_from_region
-from src.plan_classification.utils.ai.ocr_service import OCRService
 
 # ── Config ──────────────────────────────────────────────────────────────────
 PDF_PATH  = Path(r"C:\Users\tylere.METALSFAB\Desktop\Dev stuff\PDFClassifyMCP\Testing\2026-02-04-REV3-COMBINED.pdf")
